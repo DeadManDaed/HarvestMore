@@ -3,12 +3,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 export default function RegisterScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [phone, setPhone] = useState('');
+  const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
 
@@ -19,9 +21,29 @@ export default function RegisterScreen({ navigation }) {
     }
     setLoading(true);
     try {
-      // On passe username et phone dans les métadonnées
-      const metadata = { username, phone };
-      await signUp(email, password, metadata);
+      // 1. Inscription avec Supabase Auth
+      const { data: authData, error: signUpError } = await signUp(email, password, {
+        data: { full_name: fullName, username, phone } // métadonnées
+      });
+      if (signUpError) throw signUpError;
+
+      const userId = authData.user?.id;
+      if (!userId) throw new Error('Échec de la création de l’utilisateur');
+
+      // 2. Insérer le profil dans la table profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          username: username || null,
+          email: email,
+          phone: phone || null,
+          full_name: fullName || null,
+          role: 'farmer',
+        });
+
+      if (profileError) throw profileError;
+
       Alert.alert('Succès', 'Inscription réussie ! Connectez-vous.');
       navigation.navigate('Login');
     } catch (error) {
@@ -36,9 +58,10 @@ export default function RegisterScreen({ navigation }) {
       <Text style={styles.title}>Créer un compte</Text>
       <TextInput
         style={styles.input}
-        placeholder="Nom d'utilisateur (optionnel)"
+        placeholder="Nom d'utilisateur (unique)"
         value={username}
         onChangeText={setUsername}
+        autoCapitalize="none"
       />
       <TextInput
         style={styles.input}
@@ -46,6 +69,12 @@ export default function RegisterScreen({ navigation }) {
         value={phone}
         onChangeText={setPhone}
         keyboardType="phone-pad"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Nom complet"
+        value={fullName}
+        onChangeText={setFullName}
       />
       <TextInput
         style={styles.input}
