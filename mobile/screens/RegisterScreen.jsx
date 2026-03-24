@@ -21,20 +21,23 @@ export default function RegisterScreen({ navigation }) {
     }
     setLoading(true);
     try {
-      // 1. Inscription avec les métadonnées
-      const { user, session } = await signUp(email, password, {
+      // 1. Inscription via Supabase Auth
+      const { data, error: signUpError } = await signUp(email, password, {
         username,
         phone,
         full_name: fullName,
       });
 
-      if (!user) throw new Error('Échec de la création de l’utilisateur');
+      if (signUpError) throw signUpError;
+      if (!data?.user) throw new Error('Échec de la création de l’utilisateur');
 
-      // 2. Insérer le profil dans la table profiles
+      const userId = data.user.id;
+
+      // 2. Insertion manuelle dans profiles
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
-          id: user.id,
+          id: userId,
           username: username || null,
           email: email,
           phone: phone || null,
