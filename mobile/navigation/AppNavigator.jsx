@@ -9,7 +9,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator(); 
 
 export default function AppNavigator() {
   const { session, loading } = useAuth();
