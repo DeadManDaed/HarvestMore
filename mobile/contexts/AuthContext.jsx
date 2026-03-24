@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Session } from '@supabase/supabase-js';
 
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -11,13 +12,11 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Récupérer la session initiale
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // Écouter les changements d'auth
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -35,9 +34,12 @@ export const AuthProvider = ({ children }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: metadata }
+      options: {
+        data: metadata, // transmettre username, phone, full_name
+      },
     });
     if (error) throw error;
+    // data.user existe toujours même si la session est null (email confirmation)
     return data;
   };
 
