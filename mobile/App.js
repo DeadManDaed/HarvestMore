@@ -1,4 +1,4 @@
-//mobile/app.js
+//mobile/app.js 
 
 import React from 'react';
 import { View, Text } from 'react-native';
