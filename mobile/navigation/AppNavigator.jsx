@@ -8,8 +8,10 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CatalogueScreen from '../screens/CatalogueScreen';
-import DiagnosticScreen from '../screens/DiagnosticScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import SelectCropScreen from '../screens/SelectCropScreen';
+import SelectSymptomsScreen from '../screens/SelectSymptomsScreen';
+// import DiagnosticScreen from '../screens/DiagnosticScreen'; // si vous l'avez créé
+// import ProfileScreen from '../screens/ProfileScreen'; // si vous l'avez créé
 
 const Stack = createNativeStackNavigator();
 
@@ -30,9 +32,11 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="Catalogue" component={CatalogueScreen} />
-            <Stack.Screen name="Diagnostic" component={DiagnosticScreen} />
-            <Stack.Screen name="Profile" component={ProfileScreen} />
-            {/* plus tard, ajouter MessagingScreen */}
+            <Stack.Screen name="SelectCrop" component={SelectCropScreen} />
+            <Stack.Screen name="SelectSymptoms" component={SelectSymptomsScreen} />
+            {/* Décommentez si vous avez créé ces écrans */}
+            {/* <Stack.Screen name="Diagnostic" component={DiagnosticScreen} /> */}
+            {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
           </>
         )}
       </Stack.Navigator>
