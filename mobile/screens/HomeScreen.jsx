@@ -29,7 +29,7 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   const handleDiagnostic = () => {
-    navigation.navigate('Diagnostic');
+    navigation.navigate('SelectCrop');
   };
 
   const handleCatalogue = () => {
