@@ -15,15 +15,32 @@ export default function SelectSymptomsScreen({ route, navigation }) {
     fetchSymptoms();
   }, []);
 
+  useEffect(() => {
   const fetchSymptoms = async () => {
     const { data, error } = await supabase
-      .from('symptoms')
-      .select('*');
-    // Ici, on pourrait filtrer par cropId si on a une table de liaison, mais pour l'exemple on prend tous les symptômes
+      .from('symptomes')
+      .select(`
+        id,
+        code,
+        description,
+        poids,
+        pathologie:pathologies!inner (
+          id,
+          nom,
+          type,
+          conseil,
+          produit_cafcoop_nom,
+          produit_cafcoop_slug,
+          culture_id
+        )
+      `)
+      .eq('pathologie.culture_id', cropId);
     if (error) console.error(error);
     else setSymptoms(data);
     setLoading(false);
   };
+  fetchSymptoms();
+}, []);
 
   const toggleSymptom = (symptomId) => {
     if (selectedSymptoms.includes(symptomId)) {
