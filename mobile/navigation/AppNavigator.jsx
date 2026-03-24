@@ -10,8 +10,11 @@ import HomeScreen from '../screens/HomeScreen';
 import CatalogueScreen from '../screens/CatalogueScreen';
 import SelectCropScreen from '../screens/SelectCropScreen';
 import SelectSymptomsScreen from '../screens/SelectSymptomsScreen';
-// import DiagnosticScreen from '../screens/DiagnosticScreen'; // si vous l'avez créé
-// import ProfileScreen from '../screens/ProfileScreen'; // si vous l'avez créé
+// import DiagnosticScreen from '../screens/DiagnosticScreen'; 
+// import ProfileScreen from '../screens/ProfileScreen';
+import AdminDashboardScreen from '../screens/AdminDashboardScreen';
+
+
 
 const Stack = createNativeStackNavigator();
 
@@ -34,9 +37,12 @@ export default function AppNavigator() {
             <Stack.Screen name="Catalogue" component={CatalogueScreen} />
             <Stack.Screen name="SelectCrop" component={SelectCropScreen} />
             <Stack.Screen name="SelectSymptoms" component={SelectSymptomsScreen} />
-            {/* Décommentez si vous avez créé ces écrans */}
-            {/* <Stack.Screen name="Diagnostic" component={DiagnosticScreen} /> */}
-            {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
+            
+            <Stack.Screen name="Diagnostic" component={DiagnosticScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} /> 
+{user?.role === 'admin' && (
+  <Stack.Screen name="Admin" component={AdminDashboardScreen} />
+)}
           </>
         )}
       </Stack.Navigator>
