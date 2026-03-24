@@ -78,6 +78,15 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.tileIcon}>👤</Text>
           <Text style={styles.tileLabel}>Profil</Text>
         </TouchableOpacity>
+const { user, role } = useAuth();
+
+// ... plus tard dans le rendu
+{role === 'admin' && (
+  <TouchableOpacity style={styles.dashTile} onPress={() => navigation.navigate('Admin')}>
+    <Text style={styles.tileIcon}>⚙️</Text>
+    <Text style={styles.tileLabel}>Admin</Text>
+  </TouchableOpacity>
+)}
       </View>
     </ScrollView>
   );
