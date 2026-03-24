@@ -1,5 +1,4 @@
-//mobile/screens/HomeScreen.jsx
-
+// mobile/screens/HomeScreen.jsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
@@ -41,7 +40,7 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleProfile = () => {
-    Alert.alert('Information', 'La gestion du profil sera bientôt disponible.');
+    navigation.navigate('Profile');
   };
 
   return (
@@ -78,15 +77,6 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.tileIcon}>👤</Text>
           <Text style={styles.tileLabel}>Profil</Text>
         </TouchableOpacity>
-const { user, role } = useAuth();
-
-// ... plus tard dans le rendu
-{role === 'admin' && (
-  <TouchableOpacity style={styles.dashTile} onPress={() => navigation.navigate('Admin')}>
-    <Text style={styles.tileIcon}>⚙️</Text>
-    <Text style={styles.tileLabel}>Admin</Text>
-  </TouchableOpacity>
-)}
       </View>
     </ScrollView>
   );
