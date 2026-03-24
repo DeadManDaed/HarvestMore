@@ -25,9 +25,8 @@ export default function AppNavigator() {
           // Non authentifié
           <>
 {
-/*
-            <Stack.Screen name="Login" component={LoginScreen} /> */}
-            <Stack.Screen name="Register" component={RegisterScreen} /> 
+            <Stack.Screen name="Login" component={LoginScreen} />
+          {/*  <Stack.Screen name="Register" component={RegisterScreen} /> */}
           </>
         ) : (
           // Authentifié
