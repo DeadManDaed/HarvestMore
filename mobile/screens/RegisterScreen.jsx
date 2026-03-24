@@ -21,20 +21,20 @@ export default function RegisterScreen({ navigation }) {
     }
     setLoading(true);
     try {
-      // 1. Inscription avec Supabase Auth
-      const { data: authData, error: signUpError } = await signUp(email, password, {
-        data: { full_name: fullName, username, phone } // métadonnées
+      // 1. Inscription avec les métadonnées
+      const { user, session } = await signUp(email, password, {
+        username,
+        phone,
+        full_name: fullName,
       });
-      if (signUpError) throw signUpError;
 
-      const userId = authData.user?.id;
-      if (!userId) throw new Error('Échec de la création de l’utilisateur');
+      if (!user) throw new Error('Échec de la création de l’utilisateur');
 
       // 2. Insérer le profil dans la table profiles
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
-          id: userId,
+          id: user.id,
           username: username || null,
           email: email,
           phone: phone || null,
@@ -47,6 +47,7 @@ export default function RegisterScreen({ navigation }) {
       Alert.alert('Succès', 'Inscription réussie ! Connectez-vous.');
       navigation.navigate('Login');
     } catch (error) {
+      console.error(error);
       Alert.alert('Erreur', error.message);
     } finally {
       setLoading(false);
