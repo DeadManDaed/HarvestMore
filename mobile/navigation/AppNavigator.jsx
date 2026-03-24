@@ -24,6 +24,7 @@ export default function AppNavigator() {
         {!session ? (
           // Non authentifié
           <>
+{
 /*
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
@@ -32,6 +33,7 @@ export default function AppNavigator() {
           // Authentifié
           <Stack.Screen name="Home" component={HomeScreen} />
 */
+}
         )}
       </Stack.Navigator>
     </NavigationContainer>
