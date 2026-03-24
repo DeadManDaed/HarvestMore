@@ -1,15 +1,14 @@
 //mobile/navigation/AppNavigator.jsx 
 
-
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../contexts/AuthContext';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 
-const Stack = createStackNavigator(); 
+const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
   const { session, loading } = useAuth();
@@ -22,15 +21,12 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!session ? (
-          // Non authentifié
           <>
-
             <Stack.Screen name="Login" component={LoginScreen} />
-          {/*  <Stack.Screen name="Register" component={RegisterScreen} /> */}
+            <Stack.Screen name="Register" component={RegisterScreen} />
           </>
         ) : (
-          // Authentifié
-       {/*   <Stack.Screen name="Home" component={HomeScreen} /> */}
+          <Stack.Screen name="Home" component={HomeScreen} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
