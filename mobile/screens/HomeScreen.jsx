@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
-// Liste de conseils aléatoires (à remplacer plus tard par des données venant de Supabase)
 const tips = [
   "🌱 Arrosez vos cultures tôt le matin pour réduire l'évaporation.",
   "🐞 Introduisez des insectes auxiliaires pour lutter contre les ravageurs.",
@@ -21,12 +20,10 @@ export default function HomeScreen({ navigation }) {
   const [currentTip, setCurrentTip] = useState('');
 
   useEffect(() => {
-    // Change de conseil toutes les 10 secondes
     const interval = setInterval(() => {
       const randomIndex = Math.floor(Math.random() * tips.length);
       setCurrentTip(tips[randomIndex]);
     }, 10000);
-    // Premier conseil immédiat
     setCurrentTip(tips[Math.floor(Math.random() * tips.length)]);
     return () => clearInterval(interval);
   }, []);
@@ -40,11 +37,11 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleMessaging = () => {
-    navigation.navigate('Messaging');
+    Alert.alert('Information', 'La messagerie sera bientôt disponible.');
   };
 
   const handleProfile = () => {
-    navigation.navigate('Profile');
+    Alert.alert('Information', 'La gestion du profil sera bientôt disponible.');
   };
 
   return (
