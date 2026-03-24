@@ -1,5 +1,4 @@
-//mobile/navigation/AppNavigator.jsx 
-
+// mobile/navigation/AppNavigator.jsx
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,16 +9,14 @@ import HomeScreen from '../screens/HomeScreen';
 import CatalogueScreen from '../screens/CatalogueScreen';
 import SelectCropScreen from '../screens/SelectCropScreen';
 import SelectSymptomsScreen from '../screens/SelectSymptomsScreen';
-// import DiagnosticScreen from '../screens/DiagnosticScreen'; 
-// import ProfileScreen from '../screens/ProfileScreen';
+import DiagnosticResultScreen from '../screens/DiagnosticResultScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
-
-
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  const { session, loading } = useAuth();
+  const { session, loading, profile } = useAuth();
 
   if (loading) return null;
 
@@ -37,12 +34,11 @@ export default function AppNavigator() {
             <Stack.Screen name="Catalogue" component={CatalogueScreen} />
             <Stack.Screen name="SelectCrop" component={SelectCropScreen} />
             <Stack.Screen name="SelectSymptoms" component={SelectSymptomsScreen} />
-            
-            <Stack.Screen name="Diagnostic" component={DiagnosticScreen} />
-            <Stack.Screen name="Profile" component={ProfileScreen} /> 
-{user?.role === 'admin' && (
-  <Stack.Screen name="Admin" component={AdminDashboardScreen} />
-)}
+            <Stack.Screen name="DiagnosticResult" component={DiagnosticResultScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            {profile?.role === 'admin' && (
+              <Stack.Screen name="Admin" component={AdminDashboardScreen} />
+            )}
           </>
         )}
       </Stack.Navigator>
