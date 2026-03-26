@@ -43,6 +43,11 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate('Profile');
   };
 
+const handleCart = () => {
+  navigation.navigate('Cart');
+};
+
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -68,10 +73,10 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.tileLabel}>Catalogue</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.dashTile} onPress={handleMessaging}>
-          <Text style={styles.tileIcon}>💬</Text>
-          <Text style={styles.tileLabel}>Messagerie</Text>
-        </TouchableOpacity>
+        <TouchableOpacity style={styles.dashTile} onPress={handleCart}>
+  <Text style={styles.tileIcon}>🛍️</Text>
+  <Text style={styles.tileLabel}>Panier</Text>
+</TouchableOpacity>
 
         <TouchableOpacity style={styles.dashTile} onPress={handleProfile}>
           <Text style={styles.tileIcon}>👤</Text>
