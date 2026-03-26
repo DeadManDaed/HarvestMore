@@ -9,7 +9,7 @@ export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <StatusBar style="auto" />
+    {*    <StatusBar style="auto" />    *}
         <AppNavigator />
       </CartProvider>
     </AuthProvider>
