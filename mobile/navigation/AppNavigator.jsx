@@ -13,7 +13,10 @@ import DiagnosticResultScreen from '../screens/DiagnosticResultScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import CartScreen from '../screens/CartScreen';
+import ConversationsScreen from '../screens/ConversationsScreen';
+import ChatScreen from '../screens/ChatScreen';
 
+// Dans la section authentifié :
 
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +42,8 @@ export default function AppNavigator() {
             <Stack.Screen name="SelectSymptoms" component={SelectSymptomsScreen} />
             <Stack.Screen name="DiagnosticResult" component={DiagnosticResultScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
+<Stack.Screen name="Conversations" component={ConversationsScreen} />
+<Stack.Screen name="Chat" component={ChatScreen} />
             {profile?.role === 'admin' && (
               <Stack.Screen name="Admin" component={AdminDashboardScreen} />
             )}
