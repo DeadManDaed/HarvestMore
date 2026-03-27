@@ -47,6 +47,10 @@ const handleCart = () => {
   navigation.navigate('Cart');
 };
 
+const handleMessaging = () => {
+  navigation.navigate('Conversations');
+};
+
 
   return (
     <ScrollView style={styles.container}>
