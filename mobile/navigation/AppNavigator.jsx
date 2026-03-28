@@ -17,18 +17,40 @@ import CartScreen from '../screens/CartScreen';
 import ConversationsScreen from '../screens/ConversationsScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ContactsScreen from '../screens/ContactsScreen';
+import { useNotifications } from '../contexts/NotificationContext';
+
+export default function AppNavigator() {
+  const { session, loading } = useAuth();
+  
+
+  
+    
+
+  return (
+    <NavigationContainer >
+      {/* ... reste du code ... */}
+    </NavigationContainer>
+  );
+}
 
 // Dans la section authentifié :
 
 const Stack = createNativeStackNavigator();
 
+
 export default function AppNavigator() {
   const { session, loading, profile } = useAuth();
-
+  const { setNavigationRef } = useNotifications();
+  const navigationRef = useRef();
   if (loading) return null;
+  useEffect(() => {
+  if (navigationRef.current) {
+      setNavigationRef(navigationRef.current);
+    }
+  }, [navigationRef.current]);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!session ? (
           <>
