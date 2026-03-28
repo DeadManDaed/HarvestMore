@@ -29,28 +29,23 @@ export default function HomeScreen({ navigation }) {
 
   const handleDiagnostic = () => {
     navigation.navigate('SelectCrop');
-  };
+  };  
 
   const handleCatalogue = () => {
     navigation.navigate('Catalogue');
-  };
-
-  const handleMessaging = () => {
-    Alert.alert('Information', 'La messagerie sera bientôt disponible.');
   };
 
   const handleProfile = () => {
     navigation.navigate('Profile');
   };
 
-const handleCart = () => {
-  navigation.navigate('Cart');
-};
+  const handleCart = () => {
+    navigation.navigate('Cart');
+  };
 
-const handleMessaging = () => {
-  navigation.navigate('Conversations');
-};
-
+  const handleMessaging = () => {
+    navigation.navigate('Conversations');
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -78,9 +73,14 @@ const handleMessaging = () => {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.dashTile} onPress={handleCart}>
-  <Text style={styles.tileIcon}>🛍️</Text>
-  <Text style={styles.tileLabel}>Panier</Text>
-</TouchableOpacity>
+          <Text style={styles.tileIcon}>🛍️</Text>
+          <Text style={styles.tileLabel}>Panier</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.dashTile} onPress={handleMessaging}>
+          <Text style={styles.tileIcon}>💬</Text>
+          <Text style={styles.tileLabel}>Messages</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.dashTile} onPress={handleProfile}>
           <Text style={styles.tileIcon}>👤</Text>
