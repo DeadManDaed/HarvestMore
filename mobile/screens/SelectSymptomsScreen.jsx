@@ -15,12 +15,11 @@ export default function SelectSymptomsScreen({ route, navigation }) {
   }, []);
 
   const fetchSymptoms = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('symptoms')
-      .select('*');
-      // Note : nous chargeons tous les symptômes, mais vous pouvez filtrer par cropId
-      // si votre table symptoms a une colonne crop_id
+  setLoading(true);
+  const { data, error } = await supabase
+    .from('symptoms')
+    .select('*')
+    .eq('crop_id', cropId); // filtre par culture
     if (error) {
       console.error(error);
       Alert.alert('Erreur', 'Impossible de charger les symptômes');
