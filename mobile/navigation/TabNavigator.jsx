@@ -17,9 +17,10 @@ import ContactsScreen from '../screens/ContactsScreen';
 import TechnicianDashboard from '../screens/technician/TechnicianDashboard';
 */}
 import AdminDashboard from '../screens/admin/AdminDashboard';
+{/*
 import StoreManagerDashboard from '../screens/store/StoreManagerDashboard';
 import SalesDashboard from '../screens/sales/SalesDashboard';
-
+*/}
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigator() {
