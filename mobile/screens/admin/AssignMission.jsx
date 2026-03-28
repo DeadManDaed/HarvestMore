@@ -520,4 +520,142 @@ export default function AssignMission({ navigation }) {
 
             <Text style={styles.modalLabel}>Priorité</Text>
             <View style={styles.priorityContainer}>
-              {['low', 'normal', 'high'].map(
+              {['low', 'normal', 'high'].map(priority => (
+                <TouchableOpacity
+                  key={priority}
+                  style={[styles.priorityOption, newMission.priority === priority && styles.priorityOptionActive]}
+                  onPress={() => setNewMission({ ...newMission, priority })}
+                >
+                  <Text style={styles.priorityOptionText}>
+                    {priority === 'low' ? 'Basse' : priority === 'normal' ? 'Normale' : 'Haute'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.modalLabel}>Date d'échéance</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="YYYY-MM-DD"
+              value={newMission.due_date}
+              onChangeText={(text) => setNewMission({ ...newMission, due_date: text })}
+            />
+
+            <TouchableOpacity
+              style={[styles.modalButton, styles.saveButton]}
+              onPress={createMission}
+              disabled={submitting}
+            >
+              <Text style={styles.modalButtonText}>
+                {submitting ? 'Création...' : 'Créer la mission'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalCancel} onPress={() => {
+              setCreateModalVisible(false);
+              setSelectedRequest(null);
+              setNewMission({
+                type: 'diagnostic',
+                title: '',
+                description: '',
+                assigned_to: null,
+                priority: 'normal',
+                due_date: '',
+              });
+            }}>
+              <Text style={styles.modalCancelText}>Annuler</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  section: { padding: 15, paddingBottom: 5 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#2e7d32' },
+  requestsScroll: { flexDirection: 'row' },
+  requestCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 10,
+    width: 200,
+    elevation: 2,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ff9800',
+  },
+  requestHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  requestType: { fontSize: 12, fontWeight: 'bold', color: '#ff9800' },
+  requestDate: { fontSize: 10, color: '#999' },
+  requestClient: { fontSize: 13, fontWeight: '500', marginBottom: 4 },
+  requestDesc: { fontSize: 11, color: '#666' },
+  createCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 10,
+    width: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+  },
+  createCardText: { fontSize: 12, color: '#2e7d32', marginTop: 8 },
+  filterContainer: { paddingHorizontal: 15, paddingBottom: 10 },
+  filterScroll: { flexDirection: 'row', marginBottom: 8 },
+  filterChip: { paddingHorizontal: 15, paddingVertical: 6, borderRadius: 20, backgroundColor: '#fff', marginRight: 8, borderWidth: 1, borderColor: '#ddd' },
+  filterChipActive: { backgroundColor: '#2e7d32', borderColor: '#2e7d32' },
+  filterText: { fontSize: 12, color: '#666' },
+  filterTextActive: { color: '#fff' },
+  list: { padding: 15, paddingTop: 5 },
+  missionCard: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 10, elevation: 2 },
+  missionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  missionType: { flexDirection: 'row', alignItems: 'center' },
+  missionTypeText: { fontSize: 12, color: '#2e7d32', marginLeft: 5, fontWeight: '500' },
+  missionTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 6 },
+  missionDesc: { fontSize: 13, color: '#666', marginBottom: 10 },
+  missionFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  missionAssignee: { flexDirection: 'row', alignItems: 'center' },
+  missionAssigneeText: { fontSize: 11, color: '#666', marginLeft: 4 },
+  missionDue: { fontSize: 11, color: '#999' },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 15 },
+  statusText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+  emptyContainer: { padding: 40, alignItems: 'center' },
+  emptyText: { color: '#999' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#fff', borderRadius: 15, padding: 20, maxHeight: '90%' },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#2e7d32' },
+  modalSection: { marginBottom: 15 },
+  modalSectionTitle: { fontSize: 14, fontWeight: 'bold', marginBottom: 5, color: '#333' },
+  modalText: { fontSize: 14, color: '#555' },
+  modalSubText: { fontSize: 12, color: '#999', marginTop: 4 },
+  modalLabel: { fontSize: 14, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
+  modalInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 14, marginBottom: 10 },
+  textArea: { minHeight: 80, textAlignVertical: 'top' },
+  typeContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 },
+  typeOption: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0f0f0', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginRight: 8, marginBottom: 8 },
+  typeOptionActive: { backgroundColor: '#2e7d32' },
+  typeOptionText: { fontSize: 12, color: '#666', marginLeft: 5 },
+  typeOptionTextActive: { color: '#fff' },
+  employeeContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 10 },
+  employeeOption: { backgroundColor: '#f0f0f0', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginRight: 8, marginBottom: 8 },
+  employeeOptionActive: { backgroundColor: '#2e7d32' },
+  employeeOptionText: { fontSize: 12, color: '#666' },
+  priorityContainer: { flexDirection: 'row', marginBottom: 10 },
+  priorityOption: { backgroundColor: '#f0f0f0', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, marginRight: 8 },
+  priorityOptionActive: { backgroundColor: '#ff9800' },
+  priorityOptionText: { fontSize: 12, color: '#666' },
+  statusButtons: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 5 },
+  statusButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginRight: 8, marginBottom: 8 },
+  statusButtonText: { color: '#fff', fontSize: 12, fontWeight: '500' },
+  modalButton: { padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+  saveButton: { backgroundColor: '#2e7d32' },
+  modalButtonText: { color: '#fff', fontWeight: 'bold' },
+  modalCancel: { marginTop: 10, alignItems: 'center', padding: 10 },
+  modalCancelText: { color: '#777' },
+  closeButton: { marginTop: 15, alignItems: 'center', padding: 10 },
+  closeButtonText: { color: '#777' },
+});
