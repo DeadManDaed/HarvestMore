@@ -24,7 +24,7 @@ export default function SelectCropScreen({ navigation }) {
   const loadCultures = async (zoneId) => {
     setLoading(true);
     const { data, error } = await supabase
-      .from('cultures')
+      .from('crops')
       .select('*')
       .eq('zone_id', zoneId);
     if (error) console.error(error);
