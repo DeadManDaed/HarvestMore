@@ -1,5 +1,4 @@
-//mobile/screens/CartScreen.jsx
-
+// mobile/screens/CartScreen.jsx
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useCart } from '../contexts/CartContext';
@@ -8,8 +7,6 @@ import { supabase } from '../lib/supabase';
 import BackHeader from '../components/BackHeader';
 
 export default function CartScreen({ navigation }) {
-  <View style={{ flex: 1 }}>
-      <BackHeader title="Titre de l'écran" />
   const { cartItems, loading, updateQuantity, removeItem, clearCart, getTotal, fetchCart } = useCart();
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
@@ -34,7 +31,7 @@ export default function CartScreen({ navigation }) {
           total: total,
           status: 'pending_payment',
           payment_method: 'mobile_money',
-          delivery_option: 'pickup' // ou 'delivery' selon choix
+          delivery_option: 'pickup'
         })
         .select()
         .single();
@@ -42,7 +39,7 @@ export default function CartScreen({ navigation }) {
       if (orderError) throw orderError;
 
       // 2. Créer la transaction de paiement
-      const ussd = `*126*16*080413*${Math.round(total)}#`; // Exemple MTN
+      const ussd = `*126*16*080413*${Math.round(total)}#`;
       const { error: txError } = await supabase
         .from('payment_transactions')
         .insert({
@@ -78,10 +75,7 @@ export default function CartScreen({ navigation }) {
         {
           text: 'Oui',
           onPress: async () => {
-            // Ici on simule la confirmation (à remplacer par appel à Edge Function)
             Alert.alert('Merci !', 'Votre paiement sera vérifié. Vous serez notifié dès confirmation.');
-            // clearCart();
-            // navigation.goBack();
           }
         }
       ]
@@ -138,45 +132,47 @@ export default function CartScreen({ navigation }) {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Mon panier</Text>
+    <View style={{ flex: 1 }}>
+      <BackHeader title="Mon panier" />
+      <ScrollView style={styles.container}>
+        <Text style={styles.title}>Mon panier</Text>
 
-      <FlatList
-        data={cartItems}
-        renderItem={renderCartItem}
-        keyExtractor={(item) => item.id.toString()}
-        scrollEnabled={false}
-      />
+        <FlatList
+          data={cartItems}
+          renderItem={renderCartItem}
+          keyExtractor={(item) => item.id.toString()}
+          scrollEnabled={false}
+        />
 
-      <View style={styles.totalContainer}>
-        <Text style={styles.totalLabel}>Total :</Text>
-        <Text style={styles.totalAmount}>{total} FCFA</Text>
-      </View>
-
-      {orderCreated ? (
-        <View style={styles.paymentSection}>
-          <Text style={styles.paymentTitle}>Paiement par Mobile Money</Text>
-          <Text style={styles.ussdText}>Composez : {ussdCode}</Text>
-          <TouchableOpacity style={styles.paidButton} onPress={handleConfirmPayment}>
-            <Text style={styles.paidButtonText}>J’ai payé</Text>
-          </TouchableOpacity>
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalLabel}>Total :</Text>
+          <Text style={styles.totalAmount}>{total} FCFA</Text>
         </View>
-      ) : (
-        <TouchableOpacity
-          style={styles.checkoutButton}
-          onPress={handleCheckout}
-          disabled={submitting}
-        >
-          <Text style={styles.checkoutButtonText}>
-            {submitting ? 'Commande en cours...' : 'Commander'}
-          </Text>
-        </TouchableOpacity>
-      )}
 
-      <TouchableOpacity style={styles.clearButton} onPress={clearCart}>
-        <Text style={styles.clearButtonText}>Vider le panier</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {orderCreated ? (
+          <View style={styles.paymentSection}>
+            <Text style={styles.paymentTitle}>Paiement par Mobile Money</Text>
+            <Text style={styles.ussdText}>Composez : {ussdCode}</Text>
+            <TouchableOpacity style={styles.paidButton} onPress={handleConfirmPayment}>
+              <Text style={styles.paidButtonText}>J’ai payé</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.checkoutButton}
+            onPress={handleCheckout}
+            disabled={submitting}
+          >
+            <Text style={styles.checkoutButtonText}>
+              {submitting ? 'Commande en cours...' : 'Commander'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity style={styles.clearButton} onPress={clearCart}>
+          <Text style={styles.clearButtonText}>Vider le panier</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
