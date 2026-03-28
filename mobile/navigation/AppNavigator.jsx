@@ -11,16 +11,13 @@ import SelectCropScreen from '../screens/SelectCropScreen';
 import SelectSymptomsScreen from '../screens/SelectSymptomsScreen';
 import DiagnosticResultScreen from '../screens/DiagnosticResultScreen';
 import ChatScreen from '../screens/ChatScreen';
-// navigation/AppNavigator.jsx
+
 // Ajouter les imports pour les écrans admin
 import UserManagement from '../screens/admin/UserManagement';
 import DiagnosticsList from '../screens/admin/DiagnosticsList';
 import OrdersList from '../screens/admin/OrdersList';
 import MessagesAudit from '../screens/admin/MessagesAudit';
 import AssignMission from '../screens/admin/AssignMission';
-import AssignMission from '../screens/admin/AssignMission';
-import DiagnosticsList from '../screens/admin/DiagnosticsList';
-
 
 const Stack = createNativeStackNavigator();
 
