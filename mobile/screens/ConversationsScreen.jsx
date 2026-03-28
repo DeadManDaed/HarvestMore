@@ -1,4 +1,4 @@
-/mobile/screens/ConversationScreen.jsx
+//mobile/screens/ConversationScreen.jsx
 
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
