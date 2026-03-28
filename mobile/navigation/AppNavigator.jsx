@@ -86,7 +86,7 @@ import DiagnosticsList from '../screens/admin/DiagnosticsList';
 import OrdersList from '../screens/admin/OrdersList';
 import MessagesAudit from '../screens/admin/MessagesAudit';
 import AssignMission from '../screens/admin/AssignMission';
-
+import OrdersList from '../screens/admin/OrdersList';
 
 
 const Stack = createNativeStackNavigator();
@@ -124,6 +124,8 @@ export default function AppNavigator() {
             <Stack.Screen name="SelectSymptoms" component={SelectSymptomsScreen} />
             <Stack.Screen name="DiagnosticResult" component={DiagnosticResultScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen name="OrdersList" component={OrdersList} />
+
             
           </>
         )}
