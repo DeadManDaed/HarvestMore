@@ -13,7 +13,7 @@ export default function App() {
 <AuthProvider>
   <CartProvider>
     <ChatProvider>
-     // <StatusBar style="auto" />
+     {/* <StatusBar style="auto" />.  */}
       <AppNavigator />
     </ChatProvider>
   </CartProvider>
