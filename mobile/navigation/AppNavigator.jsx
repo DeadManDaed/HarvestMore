@@ -1,9 +1,9 @@
 // mobile/navigation/AppNavigator.jsx
-
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -17,37 +17,21 @@ import CartScreen from '../screens/CartScreen';
 import ConversationsScreen from '../screens/ConversationsScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ContactsScreen from '../screens/ContactsScreen';
-import { useNotifications } from '../contexts/NotificationContext';
-
-export default function AppNavigator() {
-  const { session, loading } = useAuth();
-  
-
-  
-    
-
-  return (
-    <NavigationContainer >
-      {/* ... reste du code ... */}
-    </NavigationContainer>
-  );
-}
-
-// Dans la section authentifié :
 
 const Stack = createNativeStackNavigator();
-
 
 export default function AppNavigator() {
   const { session, loading, profile } = useAuth();
   const { setNavigationRef } = useNotifications();
   const navigationRef = useRef();
-  if (loading) return null;
+
   useEffect(() => {
-  if (navigationRef.current) {
+    if (navigationRef.current) {
       setNavigationRef(navigationRef.current);
     }
-  }, [navigationRef.current]);
+  }, [navigationRef.current, setNavigationRef]);
+
+  if (loading) return null;
 
   return (
     <NavigationContainer ref={navigationRef}>
@@ -61,7 +45,7 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="Catalogue" component={CatalogueScreen} />
-<Stack.Screen name="Cart" component={CartScreen} />
+            <Stack.Screen name="Cart" component={CartScreen} />
             <Stack.Screen name="SelectCrop" component={SelectCropScreen} />
             <Stack.Screen name="SelectSymptoms" component={SelectSymptomsScreen} />
             <Stack.Screen name="DiagnosticResult" component={DiagnosticResultScreen} />
