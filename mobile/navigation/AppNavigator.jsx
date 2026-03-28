@@ -1,4 +1,5 @@
 // mobile/navigation/AppNavigator.jsx
+
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -15,6 +16,7 @@ import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import CartScreen from '../screens/CartScreen';
 import ConversationsScreen from '../screens/ConversationsScreen';
 import ChatScreen from '../screens/ChatScreen';
+import ContactsScreen from '../screens/ContactsScreen';
 
 // Dans la section authentifié :
 
@@ -42,8 +44,10 @@ export default function AppNavigator() {
             <Stack.Screen name="SelectSymptoms" component={SelectSymptomsScreen} />
             <Stack.Screen name="DiagnosticResult" component={DiagnosticResultScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
-<Stack.Screen name="Conversations" component={ConversationsScreen} />
-<Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen name="Conversations" component={ConversationsScreen} />
+            <Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen name="Contacts" component={ContactsScreen} />
+
             {profile?.role === 'admin' && (
               <Stack.Screen name="Admin" component={AdminDashboardScreen} />
             )}
