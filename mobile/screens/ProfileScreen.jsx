@@ -54,6 +54,7 @@ export default function ProfileScreen() {
         department: data.department || '',
         sub_prefecture: data.sub_prefecture || '',
         village: data.village || '',
+allow_farmer_contact: data.allow_farmer_contact || false,
         email_notifications: data.notification_preferences?.email ?? true,
         push_notifications: data.notification_preferences?.push ?? true
       });
@@ -226,6 +227,20 @@ export default function ProfileScreen() {
           />
         </View>
       </View>
+{profile?.role === 'farmer' && (
+  <View style={styles.section}>
+    <Text style={styles.sectionTitle}>Visibilité</Text>
+    <View style={styles.switchRow}>
+      <Text style={styles.switchLabel}>Permettre à d’autres agriculteurs de me contacter</Text>
+      <Switch
+        value={formData.allow_farmer_contact}
+        onValueChange={(val) => setFormData({ ...formData, allow_farmer_contact: val })}
+        disabled={!editMode}
+        trackColor={{ false: '#767577', true: '#2e7d32' }}
+      />
+    </View>
+  </View>
+)}
     </ScrollView>
   );
 }
