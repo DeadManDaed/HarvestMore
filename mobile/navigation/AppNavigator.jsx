@@ -16,7 +16,7 @@ import ChatScreen from '../screens/ChatScreen';
 import UserManagement from '../screens/admin/UserManagement';
 import DiagnosticsList from '../screens/admin/DiagnosticsList';
 import OrdersList from '../screens/admin/OrdersList';
-import MessagesAudit from '../screens/admin/MessagesAudit';
+{/*.   import MessagesAudit from '../screens/admin/MessagesAudit';   */}
 import AssignMission from '../screens/admin/AssignMission';
 
 const Stack = createNativeStackNavigator();
@@ -48,7 +48,7 @@ export default function AppNavigator() {
             <Stack.Screen name="UserManagement" component={UserManagement} />
 <Stack.Screen name="DiagnosticsList" component={DiagnosticsList} />
 <Stack.Screen name="OrdersList" component={OrdersList} />
-<Stack.Screen name="MessagesAudit" component={MessagesAudit} />
+{/*    <Stack.Screen name="MessagesAudit" component={MessagesAudit} />.   */}
 <Stack.Screen name="AssignMission" component={AssignMission} />
             <Stack.Screen name="SelectCrop" component={SelectCropScreen} />
             <Stack.Screen name="SelectSymptoms" component={SelectSymptomsScreen} />
