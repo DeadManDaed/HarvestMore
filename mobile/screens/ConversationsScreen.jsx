@@ -50,6 +50,9 @@ export default function ConversationsScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Mes conversations</Text>
+<TouchableOpacity style={styles.newButton} onPress={() => navigation.navigate('Contacts')}>
+  <Text style={styles.newButtonText}>+ Nouvelle conversation</Text>
+</TouchableOpacity>
       {conversations.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Aucune conversation pour le moment.</Text>
