@@ -101,29 +101,45 @@ export const ChatProvider = ({ children }) => {
 
   // Envoyer un message
   const sendMessage = async (content) => {
-    if (!currentConversation || !content.trim()) return;
+  if (!currentConversation || !content.trim()) return;
 
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: currentConversation.id,
-        sender_id: user.id,
-        content: content.trim()
-      });
+  const { error } = await supabase
+    .from('messages')
+    .insert({
+      conversation_id: currentConversation.id,
+      sender_id: user.id,
+      content: content.trim()
+    });
 
-    if (error) console.error(error);
-    else {
-      // Mettre à jour last_message dans la conversation
-      await supabase
-        .from('conversations')
-        .update({
-          last_message: content.trim(),
-          last_message_at: new Date()
-        })
-        .eq('id', currentConversation.id);
-    }
-  };
+  if (error) console.error(error);
+  else {
+    // Mettre à jour last_message
+    await supabase
+      .from('conversations')
+      .update({
+        last_message: content.trim(),
+        last_message_at: new Date()
+      })
+      .eq('id', currentConversation.id);
 
+    // Envoyer une notification au destinataire
+    const recipientId = currentConversation.user_id === user.id
+      ? currentConversation.technician_id
+      : currentConversation.user_id;
+
+    const senderName = profile?.full_name || 'Un utilisateur';
+
+    // Appeler l'Edge Function
+    await supabase.functions.invoke('send-message-notification', {
+      body: {
+        message: content.trim(),
+        recipientId,
+        conversationId: currentConversation.id,
+        senderName
+      }
+    });
+  }
+};
   const leaveConversation = () => {
     if (subscription) subscription.unsubscribe();
     setCurrentConversation(null);
