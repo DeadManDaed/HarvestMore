@@ -530,4 +530,149 @@ export default function DiagnosticsList({ navigation }) {
             <Text style={styles.modalTitle}>Assigner à un technicien</Text>
 
             <Text style={styles.modalLabel}>Sélectionner un technicien</Text>
+            <View style={styles.technicianContainer}>
+              {technicians.map(tech => (
+                <TouchableOpacity
+                  key={tech.id}
+                  style={[styles.technicianOption, selectedTechnician === tech.id && styles.technicianOptionActive]}
+                  onPress={() => setSelectedTechnician(tech.id)}
+                >
+                  <Text style={[styles.technicianOptionText, selectedTechnician === tech.id && styles.technicianOptionTextActive]}>
+                    {tech.full_name || tech.username}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.modalButton, styles.saveButton]}
+              onPress={assignDiagnostic}
+              disabled={updating}
+            >
+              <Text style={styles.modalButtonText}>{updating ? 'Assignation...' : 'Assigner'}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalCancel} onPress={() => {
+              setAssignModalVisible(false);
+              setSelectedTechnician(null);
+            }}>
+              <Text style={styles.modalCancelText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de réponse */}
+      <Modal visible={replyModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Répondre au diagnostic</Text>
+
+            <Text style={styles.modalLabel}>Votre réponse</Text>
+            <TextInput
+              style={[styles.modalInput, styles.textArea]}
+              placeholder="Saisissez votre réponse..."
+              value={replyText}
+              onChangeText={setReplyText}
+              multiline
+              numberOfLines={5}
+            />
+
+            <TouchableOpacity
+              style={[styles.modalButton, styles.saveButton]}
+              onPress={sendReply}
+              disabled={updating}
+            >
+              <Text style={styles.modalButtonText}>{updating ? 'Envoi...' : 'Envoyer'}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalCancel} onPress={() => {
+              setReplyModalVisible(false);
+              setReplyText('');
+            }}>
+              <Text style={styles.modalCancelText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const StatCard = ({ label, value, color }) => (
+  <View style={[styles.statCard, { borderTopColor: color }]}>
+    <Text style={styles.statValue}>{value}</Text>
+    <Text style={styles.statLabel}>{label}</Text>
+  </View>
+);
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  statsScroll: { paddingHorizontal: 15, paddingVertical: 10, flexGrow: 0 },
+  statCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 10,
+    minWidth: 80,
+    alignItems: 'center',
+    borderTopWidth: 4,
+    elevation: 2,
+  },
+  statValue: { fontSize: 22, fontWeight: 'bold', color: '#333' },
+  statLabel: { fontSize: 12, color: '#666', marginTop: 4 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', marginHorizontal: 15, marginBottom: 10, borderRadius: 25, paddingHorizontal: 15, borderWidth: 1, borderColor: '#ddd' },
+  searchIcon: { marginRight: 10 },
+  searchInput: { flex: 1, paddingVertical: 10, fontSize: 14 },
+  filterScroll: { paddingHorizontal: 15, paddingBottom: 10, flexGrow: 0 },
+  filterChip: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, backgroundColor: '#fff', marginRight: 8, borderWidth: 1, borderColor: '#ddd' },
+  filterChipActive: { backgroundColor: '#2e7d32', borderColor: '#2e7d32' },
+  filterText: { fontSize: 12, color: '#666' },
+  filterTextActive: { color: '#fff' },
+  list: { padding: 15, paddingTop: 5 },
+  diagnosticCard: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 10, elevation: 2 },
+  diagnosticHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  diagnosticInfo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  diagnosticCrop: { fontSize: 14, fontWeight: 'bold', color: '#2e7d32' },
+  diagnosticUser: { fontSize: 14, fontWeight: '500', marginBottom: 4 },
+  diagnosticDate: { fontSize: 11, color: '#999', marginBottom: 4 },
+  diagnosticTechnician: { fontSize: 12, color: '#666', marginBottom: 4 },
+  diagnosticSymptoms: { fontSize: 11, color: '#2196f3', marginTop: 4 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 15 },
+  statusText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+  emptyContainer: { padding: 40, alignItems: 'center' },
+  emptyText: { color: '#999' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#fff', borderRadius: 15, padding: 20, maxHeight: '90%' },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#2e7d32' },
+  modalSection: { marginBottom: 15 },
+  modalSectionTitle: { fontSize: 14, fontWeight: 'bold', marginBottom: 5, color: '#333' },
+  modalText: { fontSize: 14, color: '#555' },
+  modalSubText: { fontSize: 12, color: '#999', marginTop: 2 },
+  modalImage: { width: 100, height: 100, borderRadius: 8, marginRight: 8, backgroundColor: '#f0f0f0' },
+  modalLabel: { fontSize: 14, fontWeight: 'bold', marginBottom: 8 },
+  modalInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 14, marginBottom: 15 },
+  textArea: { minHeight: 100, textAlignVertical: 'top' },
+  actionButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 5 },
+  actionButton: { paddingHorizontal: 15, paddingVertical: 10, borderRadius: 8, minWidth: 120, alignItems: 'center' },
+  assignButton: { backgroundColor: '#2196f3' },
+  replyButton: { backgroundColor: '#4caf50' },
+  resolveButton: { backgroundColor: '#2e7d32' },
+  rejectButton: { backgroundColor: '#f44336' },
+  progressButton: { backgroundColor: '#ff9800' },
+  actionButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 12 },
+  technicianContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 15 },
+  technicianOption: { backgroundColor: '#f0f0f0', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginRight: 8, marginBottom: 8 },
+  technicianOptionActive: { backgroundColor: '#2e7d32' },
+  technicianOptionText: { fontSize: 12, color: '#666' },
+  technicianOptionTextActive: { color: '#fff' },
+  modalButton: { padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+  saveButton: { backgroundColor: '#2e7d32' },
+  modalButtonText: { color: '#fff', fontWeight: 'bold' },
+  modalCancel: { marginTop: 10, alignItems: 'center', padding: 10 },
+  modalCancelText: { color: '#777' },
+  closeButton: { marginTop: 15, alignItems: 'center', padding: 10 },
+  closeButtonText: { color: '#777' },
+});
      
