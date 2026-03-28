@@ -13,7 +13,9 @@ import ConversationsScreen from '../screens/ConversationsScreen';
 import ContactsScreen from '../screens/ContactsScreen';
 
 // Écrans spécifiques aux rôles
+{/*
 import TechnicianDashboard from '../screens/technician/TechnicianDashboard';
+*/}
 import AdminDashboard from '../screens/admin/AdminDashboard';
 import StoreManagerDashboard from '../screens/store/StoreManagerDashboard';
 import SalesDashboard from '../screens/sales/SalesDashboard';
