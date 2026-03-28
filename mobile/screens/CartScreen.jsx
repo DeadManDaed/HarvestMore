@@ -5,8 +5,11 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ScrollView }
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import BackHeader from '../components/BackHeader';
 
 export default function CartScreen({ navigation }) {
+  <View style={{ flex: 1 }}>
+      <BackHeader title="Titre de l'écran" />
   const { cartItems, loading, updateQuantity, removeItem, clearCart, getTotal, fetchCart } = useCart();
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
@@ -174,6 +177,7 @@ export default function CartScreen({ navigation }) {
         <Text style={styles.clearButtonText}>Vider le panier</Text>
       </TouchableOpacity>
     </ScrollView>
+    </View>
   );
 }
 
