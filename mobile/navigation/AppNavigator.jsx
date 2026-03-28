@@ -46,10 +46,7 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="MainTabs" component={TabNavigator} />
             <Stack.Screen name="UserManagement" component={UserManagement} />
-<Stack.Screen name="DiagnosticsList" component={DiagnosticsList} />
-<Stack.Screen name="OrdersList" component={OrdersList} />
 {/*    <Stack.Screen name="MessagesAudit" component={MessagesAudit} />.   */}
-<Stack.Screen name="AssignMission" component={AssignMission} />
             <Stack.Screen name="SelectCrop" component={SelectCropScreen} />
             <Stack.Screen name="SelectSymptoms" component={SelectSymptomsScreen} />
             <Stack.Screen name="DiagnosticResult" component={DiagnosticResultScreen} />
