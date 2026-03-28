@@ -40,7 +40,7 @@ export default function TabNavigator() {
 
     const roleSpecificTabs = {
       farmer: [],
-      technician: [
+    {/*  technician: [
         { name: 'Diagnostics', component: TechnicianDashboard, icon: 'medical-services' }
       ],
       sales: [
@@ -48,7 +48,7 @@ export default function TabNavigator() {
       ],
       store_manager: [
         { name: 'Commandes', component: StoreManagerDashboard, icon: 'inventory' }
-      ],
+      ],    */}
       admin: [
         { name: 'Admin', component: AdminDashboard, icon: 'admin-panel-settings' }
       ]
