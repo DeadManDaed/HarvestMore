@@ -35,10 +35,6 @@ export default function HomeScreen({ navigation }) {
     navigation.navigate('Catalogue');
   };
 
-  const handleMessaging = () => {
-    Alert.alert('Information', 'La messagerie sera bientôt disponible.');
-  };
-
   const handleProfile = () => {
     navigation.navigate('Profile');
   };
