@@ -150,19 +150,19 @@ export const NotificationProvider = ({ children }) => {
 
   // Écouter les notifications reçues
   useEffect(() => {
-    registerForPushNotifications();
+  registerForPushNotifications();
 
-    // Écouter les réponses aux notifications (clic ou actions)
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(
-      handleNotificationResponse
-    );
+  // Écouter les réponses aux notifications (clic ou actions)
+  responseListener.current = Notifications.addNotificationResponseReceivedListener(
+    handleNotificationResponse
+  );
 
-    return () => {
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
-      }
-    };
-  }, [user]);
+  return () => {
+    if (responseListener.current) {
+      responseListener.current.remove();
+    }
+  };
+}, [user]);
 
   // Fonction pour envoyer une notification (appelée depuis l'Edge Function ou directement)
   const sendPushNotification = async (expoPushToken, title, body, data = {}) => {
