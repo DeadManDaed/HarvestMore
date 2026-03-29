@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import BackHeader from '../../components/BackHeader';
+  import { supabaseAdmin } from '../../lib/supabaseAdmin';
 import { MaterialIcons } from '@expo/vector-icons';
 
 const ROLES = [
@@ -146,27 +147,42 @@ export default function UserManagement() {
     );
   };
 
-  const createUser = async () => {
+
+
+const createUser = async () => {
   if (!newUser.email || !newUser.password) {
     Alert.alert('Erreur', 'Email et mot de passe requis');
     return;
   }
   setSubmitting(true);
   try {
-    // Appeler l'Edge Function
-    const { data, error } = await supabase.functions.invoke('createUser', {
-      body: {
+    // 1. Créer l'utilisateur avec le client admin
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: newUser.email,
+      password: newUser.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: newUser.full_name,
+        username: newUser.username,
+        phone: newUser.phone
+      }
+    });
+
+    if (authError) throw authError;
+
+    // 2. Créer le profil
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: authData.user.id,
         email: newUser.email,
-        password: newUser.password,
         full_name: newUser.full_name,
         username: newUser.username,
         phone: newUser.phone,
         role: newUser.role
-      }
-    });
+      });
 
-    if (error) throw new Error(error.message);
-    if (!data.success) throw new Error(data.error);
+    if (profileError) throw profileError;
 
     Alert.alert('Succès', 'Utilisateur créé avec succès');
     setCreateModalVisible(false);
