@@ -1,8 +1,6 @@
-//mobile/screens/SelectCropScreen.jsx
-
-
+// mobile/screens/SelectCropScreen.jsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 
 export default function SelectCropScreen({ navigation }) {
@@ -17,8 +15,12 @@ export default function SelectCropScreen({ navigation }) {
 
   const fetchZones = async () => {
     const { data, error } = await supabase.from('zones').select('*');
-    if (error) console.error(error);
-    else setZones(data);
+    if (error) {
+      console.error(error);
+      Alert.alert("Erreur Zones", error.message);
+    } else {
+      setZones(data);
+    }
     setLoading(false);
   };
 
@@ -28,8 +30,18 @@ export default function SelectCropScreen({ navigation }) {
       .from('crops')
       .select('*')
       .eq('zone_id', zoneId);
-    if (error) console.error(error);
-    else setCultures(data);
+      
+    if (error) {
+      console.error(error);
+      // On affiche l'erreur SQL directement sur le téléphone
+      Alert.alert("Erreur Supabase", error.message); 
+    } else {
+      // Si la requête réussit mais qu'il n'y a rien, on s'en rendra compte
+      if (data.length === 0) {
+        Alert.alert("Info", "Aucune culture trouvée pour cette zone dans la base de données.");
+      }
+      setCultures(data);
+    }
     setLoading(false);
   };
 
@@ -58,13 +70,14 @@ export default function SelectCropScreen({ navigation }) {
           </TouchableOpacity>
         )}
         contentContainerStyle={styles.zoneList}
+        showsHorizontalScrollIndicator={false}
       />
 
       {selectedZone && (
         <>
           <Text style={styles.subtitle}>Cultures recommandées pour {selectedZone.nom}</Text>
           {loading ? (
-            <ActivityIndicator size="large" color="#2e7d32" />
+            <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 20 }} />
           ) : (
             <FlatList
               data={cultures}
@@ -85,8 +98,8 @@ export default function SelectCropScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
   title: { fontSize: 20, fontWeight: 'bold', marginBottom: 15 },
-  zoneList: { paddingVertical: 10 },
-  zoneCard: { backgroundColor: '#fff', padding: 10, borderRadius: 8, marginRight: 10, borderWidth: 1, borderColor: '#ccc' },
+  zoneList: { paddingVertical: 10, maxHeight: 60 },
+  zoneCard: { backgroundColor: '#fff', padding: 10, borderRadius: 8, marginRight: 10, borderWidth: 1, borderColor: '#ccc', justifyContent: 'center' },
   zoneSelected: { backgroundColor: '#2e7d32', borderColor: '#2e7d32' },
   zoneLabel: { fontSize: 14, color: '#333' },
   subtitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 15 },
