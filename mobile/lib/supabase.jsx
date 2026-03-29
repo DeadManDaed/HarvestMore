@@ -1,4 +1,4 @@
-//mobile/lib/supabase.jsx
+// mobile/lib/supabase.jsx
 
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
@@ -11,9 +11,9 @@ const ExpoSecureStoreAdapter = {
   removeItem: (key) => SecureStore.deleteItemAsync(key),
 };
 
-       
-const supabaseUrl = 'https://qhmgrjeqdsvzetznctyn.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobWdyamVxZHN2emV0em5jdHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyODczMDgsImV4cCI6MjA4OTg2MzMwOH0.uWOViz7bOVoqIZfqmT0LVI-RIBnDXmOr-prn_SuruUo';
+// Appel dynamique des variables d'environnement
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
