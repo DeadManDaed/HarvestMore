@@ -147,55 +147,44 @@ export default function UserManagement() {
   };
 
   const createUser = async () => {
-    if (!newUser.email || !newUser.password) {
-      Alert.alert('Erreur', 'Email et mot de passe requis');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      // Créer l'utilisateur dans auth.users
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+  if (!newUser.email || !newUser.password) {
+    Alert.alert('Erreur', 'Email et mot de passe requis');
+    return;
+  }
+  setSubmitting(true);
+  try {
+    // Appeler l'Edge Function
+    const { data, error } = await supabase.functions.invoke('create-user', {
+      body: {
         email: newUser.email,
         password: newUser.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: newUser.full_name,
-          username: newUser.username,
-          phone: newUser.phone
-        }
-      });
-      if (authError) throw authError;
+        full_name: newUser.full_name,
+        username: newUser.username,
+        phone: newUser.phone,
+        role: newUser.role
+      }
+    });
 
-      // Créer le profil
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
-          email: newUser.email,
-          full_name: newUser.full_name,
-          username: newUser.username,
-          phone: newUser.phone,
-          role: newUser.role
-        });
-      if (profileError) throw profileError;
+    if (error) throw new Error(error.message);
+    if (!data.success) throw new Error(data.error);
 
-      Alert.alert('Succès', 'Utilisateur créé avec succès');
-      setCreateModalVisible(false);
-      setNewUser({
-        email: '',
-        password: '',
-        full_name: '',
-        username: '',
-        phone: '',
-        role: 'farmer'
-      });
-      fetchUsers();
-    } catch (error) {
-      Alert.alert('Erreur', error.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    Alert.alert('Succès', 'Utilisateur créé avec succès');
+    setCreateModalVisible(false);
+    setNewUser({
+      email: '',
+      password: '',
+      full_name: '',
+      username: '',
+      phone: '',
+      role: 'farmer'
+    });
+    fetchUsers();
+  } catch (error) {
+    Alert.alert('Erreur', error.message);
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const renderUserItem = ({ item }) => (
     <TouchableOpacity style={styles.userCard} onPress={() => openUserModal(item)}>
