@@ -154,7 +154,7 @@ export default function UserManagement() {
   setSubmitting(true);
   try {
     // Appeler l'Edge Function
-    const { data, error } = await supabase.functions.invoke('create-user', {
+    const { data, error } = await supabase.functions.invoke('createUser', {
       body: {
         email: newUser.email,
         password: newUser.password,
