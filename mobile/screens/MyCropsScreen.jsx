@@ -10,10 +10,7 @@ export default function MyCropsScreen({ route, navigation }) {
   const { mode } = route.params || { mode: 'management' };
   
   const [plantations, setPlantations] = useState([]);
-// À ajouter dans MyCropsScreen.jsx
-import * as Location from 'expo-location';
 
-// ... dans le composant
 const [isModalVisible, setModalVisible] = useState(false);
 const [formData, setFormData] = useState({
   crop_id: null,
