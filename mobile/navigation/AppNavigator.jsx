@@ -127,6 +127,9 @@ export default function AppNavigator() {
               component={DiagnosticResultScreen}
               options={{ title: 'Résultat Diagnostic' }}
             />
+<Stack.Screen name="SelectCrop" component={SelectCropScreen} options={{ title: 'Choisir une culture' }} />
+<Stack.Screen name="MyCrops" component={MyCropsScreen} options={{ title: 'Mes Plantations' }} />
+<Stack.Screen name="CropDetail" component={CropDetailScreen} options={{ title: 'Détail du suivi' }} />
             
             {/* ───────────────────────────────────────────────────────────── */}
             {/* ADMIN SCREENS */}
