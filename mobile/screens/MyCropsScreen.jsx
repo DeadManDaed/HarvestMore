@@ -1,93 +1,37 @@
 // mobile/screens/MyCropsScreen.jsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, ScrollView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import BackHeader from '../components/BackHeader';
 
 export default function MyCropsScreen({ route, navigation }) {
   const { user } = useAuth();
   const { mode } = route.params || { mode: 'management' };
-  
+
   const [plantations, setPlantations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-const [isModalVisible, setModalVisible] = useState(false);
-const [formData, setFormData] = useState({
-  crop_id: null,
-  crop_name: '',
-  area_size: '',
-  plant_count: '',
-  planting_date: '',
-  location_name: '',
-  estimated_yield: '',
-  latitude: null,
-  longitude: null,
-  interventions: []
-});
-
-const getCurrentLocation = async () => {
-  const { status } = await Location.requestForegroundPermissionsAsync();
-  if (status !== 'granted') {
-    Alert.alert('Permission refusée', 'Activez la localisation pour géolocaliser votre champ.');
-    return;
-  }
-
-  const location = await Location.getCurrentPositionAsync({});
-  const address = await Location.reverseGeocodeAsync(location.coords);
-  const locationName = address[0]?.name || address[0]?.street || 
-    `${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`;
-
-  setFormData(prev => ({
-    ...prev,
-    latitude: location.coords.latitude,
-    longitude: location.coords.longitude,
-    location_name: locationName
-  }));
-};
-
-const savePlantation = async () => {
-  if (!formData.crop_id) {
-    Alert.alert('Erreur', 'Veuillez sélectionner une culture');
-    return;
-  }
-
-  setLoading(true);
-  const { error } = await supabase
-    .from('user_plantations')
-    .insert({
-      user_id: user.id,
-      crop_id: formData.crop_id,
-      area_size: parseFloat(formData.area_size) || null,
-      plant_count: parseInt(formData.plant_count) || null,
-      planting_date: formData.planting_date || null,
-      location_name: formData.location_name || null,
-      latitude: formData.latitude || null,
-      longitude: formData.longitude || null,
-      estimated_yield: parseFloat(formData.estimated_yield) || null,
-      interventions: [],
-      status: 'active'
-    });
-
-  if (error) {
-    Alert.alert('Erreur', error.message);
-  } else {
-    Alert.alert('Succès', 'Plantation ajoutée');
-    setModalVisible(false);
-    setFormData({
-      crop_id: null, crop_name: '', area_size: '', plant_count: '',
-      planting_date: '', location_name: '', estimated_yield: '',
-      latitude: null, longitude: null, interventions: []
-    });
-    fetchPlantations();
-  }
-  setLoading(false);
-};
+  const [formData, setFormData] = useState({
+    crop_id: null,
+    crop_name: '',
+    area_size: '',
+    plant_count: '',
+    planting_date: '',
+    location_name: '',
+    estimated_yield: '',
+    latitude: null,
+    longitude: null,
+    interventions: []
+  });
 
   useEffect(() => {
     fetchPlantations();
   }, []);
 
-  // CORRECTION : On surveille route.params, mais on vide les params après utilisation
   useEffect(() => {
     if (route.params?.selectedCropId) {
       setFormData(prev => ({ 
@@ -96,21 +40,87 @@ const savePlantation = async () => {
         crop_name: route.params.selectedCropName 
       }));
       setModalVisible(true);
-
-      // IMPORTANT : Nettoyer les paramètres de navigation pour éviter la boucle
       navigation.setParams({ selectedCropId: null, selectedCropName: null });
     }
   }, [route.params?.selectedCropId]);
+
   const fetchPlantations = async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from('user_plantations')
       .select('*, crops(name)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
-    if (!error) setPlantations(data);
+    if (error) console.error(error);
+    else setPlantations(data || []);
+    setLoading(false);
   };
 
-  // Titre dynamique selon l'origine
+  const getCurrentLocation = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission refusée', 'Activez la localisation pour géolocaliser votre champ.');
+      return;
+    }
+
+    const location = await Location.getCurrentPositionAsync({});
+    const address = await Location.reverseGeocodeAsync(location.coords);
+    const locationName = address[0]?.name || address[0]?.street || 
+      `${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`;
+
+    setFormData(prev => ({
+      ...prev,
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      location_name: locationName
+    }));
+  };
+
+  const savePlantation = async () => {
+    if (!formData.crop_id) {
+      Alert.alert('Erreur', 'Veuillez sélectionner une culture');
+      return;
+    }
+
+    setSubmitting(true);
+    const { error } = await supabase
+      .from('user_plantations')
+      .insert({
+        user_id: user.id,
+        crop_id: formData.crop_id,
+        area_size: parseFloat(formData.area_size) || null,
+        plant_count: parseInt(formData.plant_count) || null,
+        planting_date: formData.planting_date || null,
+        location_name: formData.location_name || null,
+        latitude: formData.latitude || null,
+        longitude: formData.longitude || null,
+        estimated_yield: parseFloat(formData.estimated_yield) || null,
+        interventions: [],
+        status: 'active'
+      });
+
+    if (error) {
+      Alert.alert('Erreur', error.message);
+    } else {
+      Alert.alert('Succès', 'Plantation ajoutée');
+      setModalVisible(false);
+      setFormData({
+        crop_id: null,
+        crop_name: '',
+        area_size: '',
+        plant_count: '',
+        planting_date: '',
+        location_name: '',
+        estimated_yield: '',
+        latitude: null,
+        longitude: null,
+        interventions: []
+      });
+      fetchPlantations();
+    }
+    setSubmitting(false);
+  };
+
   const screenTitle = mode === 'selection_diagnostic' 
     ? "Quelle plantation diagnostiquer ?" 
     : "Mes Plantations";
@@ -120,13 +130,11 @@ const savePlantation = async () => {
       style={[styles.card, mode === 'selection_diagnostic' && styles.cardHighlight]}
       onPress={() => {
         if (mode === 'selection_diagnostic') {
-          // Cas A : On part au diagnostic avec les infos de la parcelle
           navigation.navigate('SelectSymptoms', { 
             cropId: item.crop_id, 
             plantationId: item.id 
           });
         } else {
-          // Cas B : Consultation classique
           navigation.navigate('CropDetail', { plantation: item });
         }
       }}
@@ -142,11 +150,18 @@ const savePlantation = async () => {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#2e7d32" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>{screenTitle}</Text>
+      <BackHeader title={screenTitle} />
 
-      {/* Si on vient du Diagnostic, on permet de sauter cette étape pour un diagnostic libre */}
       {mode === 'selection_diagnostic' && (
         <TouchableOpacity 
           style={styles.freeDiagBtn}
@@ -156,7 +171,7 @@ const savePlantation = async () => {
         </TouchableOpacity>
       )}
 
-      {plantations.length === 0 && !loading ? (
+      {plantations.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>Vous n'avez pas encore de plantation enregistrée.</Text>
           {mode === 'selection_diagnostic' && (
@@ -171,26 +186,110 @@ const savePlantation = async () => {
       ) : (
         <FlatList 
           data={plantations} 
-          keyExtractor={i => i.id} 
+          keyExtractor={item => item.id} 
           renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={styles.list}
         />
       )}
 
-      {/* Le bouton + sert toujours à ajouter une plantation réelle */}
       <TouchableOpacity 
         style={styles.fab} 
         onPress={() => navigation.navigate('SelectCrop', { mode: 'register' })}
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
+
+      {/* Modal d'ajout de plantation */}
+      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            <Text style={styles.modalTitle}>Ajouter une plantation</Text>
+
+            <Text style={styles.modalLabel}>Culture</Text>
+            <TouchableOpacity 
+              style={styles.modalInput}
+              onPress={() => {
+                setModalVisible(false);
+                navigation.navigate('SelectCrop', { mode: 'register' });
+              }}
+            >
+              <Text style={formData.crop_name ? styles.modalInputText : styles.modalInputPlaceholder}>
+                {formData.crop_name || "Sélectionner une culture"}
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.modalLabel}>Nom du champ (optionnel)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ex: Champ du village"
+              value={formData.location_name}
+              onChangeText={(text) => setFormData({ ...formData, location_name: text })}
+            />
+
+            <Text style={styles.modalLabel}>Superficie (Ha)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ex: 2.5"
+              keyboardType="numeric"
+              value={formData.area_size}
+              onChangeText={(text) => setFormData({ ...formData, area_size: text })}
+            />
+
+            <Text style={styles.modalLabel}>Nombre de plants</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ex: 5000"
+              keyboardType="numeric"
+              value={formData.plant_count}
+              onChangeText={(text) => setFormData({ ...formData, plant_count: text })}
+            />
+
+            <Text style={styles.modalLabel}>Date de plantation (YYYY-MM-DD)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="2025-03-30"
+              value={formData.planting_date}
+              onChangeText={(text) => setFormData({ ...formData, planting_date: text })}
+            />
+
+            <Text style={styles.modalLabel}>Rendement estimé (T/ha)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Ex: 3.5"
+              keyboardType="numeric"
+              value={formData.estimated_yield}
+              onChangeText={(text) => setFormData({ ...formData, estimated_yield: text })}
+            />
+
+            <TouchableOpacity style={styles.locationButton} onPress={getCurrentLocation}>
+              <Text style={styles.locationButtonText}>📍 Obtenir ma position GPS</Text>
+            </TouchableOpacity>
+            {formData.location_name && (
+              <Text style={styles.locationPreview}>📍 {formData.location_name}</Text>
+            )}
+
+            <TouchableOpacity 
+              style={[styles.saveButton, submitting && styles.disabledButton]} 
+              onPress={savePlantation}
+              disabled={submitting}
+            >
+              <Text style={styles.saveButtonText}>{submitting ? 'Enregistrement...' : 'Enregistrer'}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setModalVisible(false)}>
+              <Text style={styles.modalCancelText}>Annuler</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f7fa', padding: 15 },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#1b5e20', marginBottom: 15 },
+  container: { flex: 1, backgroundColor: '#f5f7fa' },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  list: { padding: 15, paddingBottom: 100 },
   card: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 12, elevation: 2 },
   cardHighlight: { borderColor: '#2e7d32', borderWidth: 1 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -199,12 +298,27 @@ const styles = StyleSheet.create({
   selectBadgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
   locationText: { color: '#666', fontSize: 13, marginTop: 5 },
   detailsText: { color: '#999', fontSize: 12, marginTop: 2 },
-  freeDiagBtn: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 20, borderStyle: 'dashed', borderWidth: 1, borderColor: '#2e7d32', alignItems: 'center' },
+  freeDiagBtn: { backgroundColor: '#fff', margin: 15, padding: 15, borderRadius: 12, borderStyle: 'dashed', borderWidth: 1, borderColor: '#2e7d32', alignItems: 'center' },
   freeDiagText: { color: '#2e7d32', fontWeight: 'bold' },
-  emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   emptyText: { textAlign: 'center', color: '#666', marginBottom: 20 },
   primaryBtn: { backgroundColor: '#2e7d32', padding: 15, borderRadius: 10, width: '100%', alignItems: 'center' },
   primaryBtnText: { color: '#fff', fontWeight: 'bold' },
   fab: { position: 'absolute', bottom: 30, right: 30, backgroundColor: '#2e7d32', width: 65, height: 65, borderRadius: 33, justifyContent: 'center', alignItems: 'center', elevation: 5 },
-  fabText: { color: '#fff', fontSize: 35 }
+  fabText: { color: '#fff', fontSize: 35, marginTop: -4 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#fff', borderRadius: 15, padding: 20, maxHeight: '90%' },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#2e7d32' },
+  modalLabel: { fontSize: 14, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
+  modalInput: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 12, fontSize: 14, marginBottom: 10, backgroundColor: '#fff' },
+  modalInputText: { color: '#333' },
+  modalInputPlaceholder: { color: '#999' },
+  locationButton: { backgroundColor: '#e8f5e9', padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
+  locationButtonText: { color: '#2e7d32', fontWeight: 'bold' },
+  locationPreview: { fontSize: 12, color: '#666', marginBottom: 10, fontStyle: 'italic' },
+  saveButton: { backgroundColor: '#2e7d32', padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+  saveButtonText: { color: '#fff', fontWeight: 'bold' },
+  disabledButton: { opacity: 0.6 },
+  modalCancel: { marginTop: 10, alignItems: 'center', padding: 10 },
+  modalCancelText: { color: '#777' }
 });
