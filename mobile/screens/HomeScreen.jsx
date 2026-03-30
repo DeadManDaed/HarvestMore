@@ -1,4 +1,5 @@
 // mobile/screens/HomeScreen.jsx
+
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
@@ -13,8 +14,12 @@ import { useAuth } from '../contexts/AuthContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CAROUSEL_HEIGHT = SCREEN_HEIGHT / 3;
-// On calcule la largeur exacte d'une carte (Largeur écran moins les marges du container)
-const CARD_WIDTH = SCREEN_WIDTH - 20; 
+
+// Le calcul magique : 
+// Écran complet (SCREEN_WIDTH) 
+// - 20 (marges gauche/droite du carouselContainer) 
+// - 70 (largeur des deux boutons navBtn, 35x2)
+const SLIDE_WIDTH = SCREEN_WIDTH - 90; 
 
 const tips = [
   // GESTION DE L'EAU (10 astuces)
@@ -137,7 +142,6 @@ export default function HomeScreen({ navigation }) {
   const flatListRef = useRef(null);
   const timerRef = useRef(null);
 
-  // Gestion du défilement automatique
   useEffect(() => {
     startTimer();
     return () => stopTimer();
@@ -148,7 +152,7 @@ export default function HomeScreen({ navigation }) {
     timerRef.current = setInterval(() => {
       let nextIndex = (currentIndex + 1) % tips.length;
       scrollToIndex(nextIndex);
-    }, 3500);
+    }, 4000); // 4 secondes donne un peu plus le temps de lire
   };
 
   const stopTimer = () => {
@@ -174,12 +178,11 @@ export default function HomeScreen({ navigation }) {
     scrollToIndex(nextIndex);
   };
 
-  // Synchronise l'index si l'utilisateur swipe manuellement
   const onScroll = (event) => {
     const slideSize = event.nativeEvent.layoutMeasurement.width;
     const index = event.nativeEvent.contentOffset.x / slideSize;
     const roundIndex = Math.round(index);
-    if (roundIndex !== currentIndex) {
+    if (roundIndex !== currentIndex && roundIndex >= 0 && roundIndex < tips.length) {
       setCurrentIndex(roundIndex);
     }
   };
@@ -220,19 +223,23 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.navIcon}>‹</Text>
               </TouchableOpacity>
 
+              {/* L'astuce est ici : on couple pagingEnabled avec snapToInterval pour forcer le magnétisme */}
               <FlatList
                 ref={flatListRef}
                 data={tips}
                 renderItem={renderTip}
                 horizontal
                 pagingEnabled
+                snapToInterval={SLIDE_WIDTH}
+                snapToAlignment="center"
+                decelerationRate="fast"
                 showsHorizontalScrollIndicator={false}
                 onScroll={onScroll}
                 scrollEventThrottle={16}
                 keyExtractor={(_, index) => index.toString()}
                 getItemLayout={(_, index) => ({
-                  length: CARD_WIDTH,
-                  offset: CARD_WIDTH * index,
+                  length: SLIDE_WIDTH,
+                  offset: SLIDE_WIDTH * index,
                   index,
                 })}
               />
@@ -242,7 +249,6 @@ export default function HomeScreen({ navigation }) {
               </TouchableOpacity>
             </View>
             
-            {/* Pagination discrète */}
             <View style={styles.dotsRow}>
                {tips.slice(0, 8).map((_, i) => (
                  <View key={i} style={[styles.dot, currentIndex % 8 === i && styles.activeDot]} />
@@ -251,7 +257,7 @@ export default function HomeScreen({ navigation }) {
           </View>
         </>
       }
-      data={[]} // On vide la data principale car tout est dans le Header
+      data={[]}
       renderItem={null}
       ListFooterComponent={
         <View style={styles.dashBoard}>
@@ -298,7 +304,8 @@ const styles = StyleSheet.create({
   carouselContainer: {
     height: CAROUSEL_HEIGHT,
     backgroundColor: '#fff',
-    margin: 10,
+    marginHorizontal: 10,
+    marginVertical: 15,
     borderRadius: 15,
     elevation: 5,
     paddingBottom: 10,
@@ -318,8 +325,8 @@ const styles = StyleSheet.create({
   navIcon: { fontSize: 40, color: '#1b5e20', fontWeight: '200' },
   
   tipCard: {
-    width: CARD_WIDTH - 70, // On soustrait la largeur des boutons de nav
-    marginHorizontal: 0,
+    width: SLIDE_WIDTH, // La largeur exacte au pixel près
+    marginHorizontal: 0, // IMPORTANT: Pas de marges latérales ici, sinon le calcul fausse
     borderRadius: 12,
     padding: 15,
     justifyContent: 'center',
