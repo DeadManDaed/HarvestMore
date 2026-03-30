@@ -7,20 +7,35 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function MyCropsScreen({ route, navigation }) {
   const { user } = useAuth();
-  const { mode } = route.params || { mode: 'management' }; // 'management' ou 'selection_diagnostic'
+  const { mode } = route.params || { mode: 'management' };
   
   const [plantations, setPlantations] = useState([]);
+  const [isModalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [locationPermission, setLocationPermission] = useState(null);
+
+  const [formData, setFormData] = useState({
+    crop_id: null, crop_name: '', area_size: '', plant_count: '',
+    location_name: '', estimated_yield: '', initial_tech: ''
+  });
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(status === 'granted');
-    })();
     fetchPlantations();
   }, []);
 
+  // CORRECTION : On surveille route.params, mais on vide les params après utilisation
+  useEffect(() => {
+    if (route.params?.selectedCropId) {
+      setFormData(prev => ({ 
+        ...prev, 
+        crop_id: route.params.selectedCropId,
+        crop_name: route.params.selectedCropName 
+      }));
+      setModalVisible(true);
+
+      // IMPORTANT : Nettoyer les paramètres de navigation pour éviter la boucle
+      navigation.setParams({ selectedCropId: null, selectedCropName: null });
+    }
+  }, [route.params?.selectedCropId]);
   const fetchPlantations = async () => {
     const { data, error } = await supabase
       .from('user_plantations')
