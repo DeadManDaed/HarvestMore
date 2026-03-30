@@ -49,7 +49,6 @@ export default function SelectCropScreen({ navigation }) {
                               setCultures(data || []);
                               }
                               setLoading(false);
-      */
   };
 
   const handleZoneSelect = (zone) => {
