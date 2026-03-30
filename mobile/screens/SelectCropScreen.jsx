@@ -24,21 +24,21 @@ export default function SelectCropScreen({ navigation }) {
     setLoading(false);
   };
 
-  const loadCultures = async (zoneId) => {
+  const loadCultures = async (zone) => {
     setLoading(true);
+    // 1. On utilise .contains car la colonne 'zone' est un ARRAY dans ta base
+    // 2. On filtre par le nom de la zone (ou l'id si ton array contient des IDs)
     const { data, error } = await supabase
       .from('crops')
       .select('*')
-      .eq('zone_id', zoneId);
-      
+      .contains('zone', [zone.nom]); 
+
     if (error) {
       console.error(error);
-      // On affiche l'erreur SQL directement sur le téléphone
       Alert.alert("Erreur Supabase", error.message); 
     } else {
-      // Si la requête réussit mais qu'il n'y a rien, on s'en rendra compte
       if (data.length === 0) {
-        Alert.alert("Info", "Aucune culture trouvée pour cette zone dans la base de données.");
+        Alert.alert("Info", `Aucune culture trouvée pour la zone : ${zone.nom}`);
       }
       setCultures(data);
     }
@@ -47,35 +47,40 @@ export default function SelectCropScreen({ navigation }) {
 
   const handleZoneSelect = (zone) => {
     setSelectedZone(zone);
-    loadCultures(zone.id);
+    loadCultures(zone); // On passe l'objet zone complet
   };
 
   const handleCropSelect = (crop) => {
-    navigation.navigate('SelectSymptoms', { cropId: crop.id, cropName: crop.nom });
+    // Attention : Dans ta base c'est 'name', pas 'nom'
+    navigation.navigate('SelectSymptoms', { cropId: crop.id, cropName: crop.name });
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Zone agro-écologique</Text>
-      <FlatList
-        horizontal
-        data={zones}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.zoneCard, selectedZone?.id === item.id && styles.zoneSelected]}
-            onPress={() => handleZoneSelect(item)}
-          >
-            <Text style={styles.zoneLabel}>{item.nom}</Text>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={styles.zoneList}
-        showsHorizontalScrollIndicator={false}
-      />
+      <View style={{ height: 60 }}> 
+        <FlatList
+          horizontal
+          data={zones}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[styles.zoneCard, selectedZone?.id === item.id && styles.zoneSelected]}
+              onPress={() => handleZoneSelect(item)}
+            >
+              <Text style={[styles.zoneLabel, selectedZone?.id === item.id && { color: '#fff' }]}>
+                {item.nom}
+              </Text>
+            </TouchableOpacity>
+          )}
+          contentContainerStyle={styles.zoneList}
+          showsHorizontalScrollIndicator={false}
+        />
+      </View>
 
       {selectedZone && (
         <>
-          <Text style={styles.subtitle}>Cultures recommandées pour {selectedZone.nom}</Text>
+          <Text style={styles.subtitle}>Cultures pour : {selectedZone.nom}</Text>
           {loading ? (
             <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 20 }} />
           ) : (
@@ -84,7 +89,11 @@ export default function SelectCropScreen({ navigation }) {
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
                 <TouchableOpacity style={styles.cropCard} onPress={() => handleCropSelect(item)}>
-                  <Text style={styles.cropName}>{item.nom}</Text>
+                  {/* Correction ici : item.name au lieu de item.nom */}
+                  <Text style={styles.cropName}>{item.name}</Text>
+                  {item.scientific_name && (
+                    <Text style={styles.scientificName}>{item.scientific_name}</Text>
+                  )}
                 </TouchableOpacity>
               )}
             />
@@ -96,13 +105,14 @@ export default function SelectCropScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5', paddingTop: 50 },
   title: { fontSize: 20, fontWeight: 'bold', marginBottom: 15 },
-  zoneList: { paddingVertical: 10, maxHeight: 60 },
-  zoneCard: { backgroundColor: '#fff', padding: 10, borderRadius: 8, marginRight: 10, borderWidth: 1, borderColor: '#ccc', justifyContent: 'center' },
+  zoneList: { paddingVertical: 5 },
+  zoneCard: { backgroundColor: '#fff', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 20, marginRight: 10, borderWidth: 1, borderColor: '#ccc', height: 45, justifyContent: 'center' },
   zoneSelected: { backgroundColor: '#2e7d32', borderColor: '#2e7d32' },
-  zoneLabel: { fontSize: 14, color: '#333' },
-  subtitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 15 },
+  zoneLabel: { fontSize: 14, color: '#333', fontWeight: '500' },
+  subtitle: { fontSize: 18, fontWeight: 'bold', marginVertical: 15, color: '#2e7d32' },
   cropCard: { backgroundColor: '#fff', padding: 15, borderRadius: 8, marginBottom: 10, elevation: 2 },
   cropName: { fontSize: 16, fontWeight: 'bold' },
+  scientificName: { fontSize: 12, fontStyle: 'italic', color: '#666' }
 });
