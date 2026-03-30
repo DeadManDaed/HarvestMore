@@ -29,12 +29,23 @@ export default function SelectCropScreen({ route, navigation }) {
     c.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const getCropEmoji = (category, type) => {
+    const cat = (category || '').toLowerCase();
+    const typ = (type || '').toLowerCase();
+    
+    if (cat === 'céréale' || typ === 'céréale') return '🌾';
+    if (cat === 'tubercule' || typ === 'tubercule') return '🥔';
+    if (cat === 'légume' || typ === 'légume') return '🥬';
+    if (cat === 'fruitier' || typ === 'fruit') return '🍎';
+    if (cat === 'légumineuse' || typ === 'légumineuse') return '🫘';
+    if (cat === 'fibre' || typ === 'fibre') return '🧵';
+    return '🌿';
+  };
+
   const handleCropSelect = (crop) => {
     if (mode === 'diagnostic') {
-      // Diagnostic rapide : aller directement aux symptômes
       navigation.navigate('SelectSymptoms', { cropId: crop.id, cropName: crop.name });
     } else {
-      // Enregistrement de parcelle : revenir à MyCrops avec la culture sélectionnée
       navigation.navigate('MyCrops', { 
         selectedCropId: crop.id, 
         selectedCropName: crop.name 
@@ -48,13 +59,11 @@ export default function SelectCropScreen({ route, navigation }) {
       onPress={() => handleCropSelect(item)}
     >
       <View style={styles.cropIcon}>
-        <Text style={styles.cropEmoji}>
-          {item.category === 'Céréale' ? '🌾' : item.category === 'Légume' ? '🥬' : '🌿'}
-        </Text>
+        <Text style={styles.cropEmoji}>{getCropEmoji(item.category, item.type)}</Text>
       </View>
       <View style={styles.cropInfo}>
         <Text style={styles.cropName}>{item.name}</Text>
-        <Text style={styles.cropType}>{item.type || item.category || 'Culture'}</Text>
+        <Text style={styles.cropType}>{item.category || item.type || 'Culture'}</Text>
       </View>
     </TouchableOpacity>
   );
