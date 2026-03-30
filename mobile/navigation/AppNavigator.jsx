@@ -111,12 +111,7 @@ export default function AppNavigator() {
               component={DiagnosticScreen}
               options={{ title: 'Diagnostic' }}
             />
-            
-            <Stack.Screen 
-              name="SelectCrop" 
-              component={SelectCropScreen}
-              options={{ title: 'Sélectionner Culture' }}
-            />
+ 
             
             <Stack.Screen 
               name="SelectSymptoms" 
