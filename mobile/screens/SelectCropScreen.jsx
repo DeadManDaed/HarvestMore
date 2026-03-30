@@ -65,49 +65,50 @@ export default function SelectCropScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Zone agro-écologique</Text>
-      <View style={{ height: 60 }}> 
+        <View style={{ height: 70 }}>
+    <FlatList
+      horizontal
+      data={zones}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={({ item }) => (
+        <TouchableOpacity
+          style={[styles.zoneCard, selectedZone?.id === item.id && styles.zoneSelected]}
+          onPress={() => handleZoneSelect(item)}
+        >
+          <Text style={[styles.zoneLabel, selectedZone?.id === item.id && { color: '#fff' }]}>
+            {item.nom}
+          </Text>
+        </TouchableOpacity>
+      )}
+      contentContainerStyle={styles.zoneList}
+      showsHorizontalScrollIndicator={false}
+    />
+  </View>
+
+  {selectedZone && (
+    <>
+      <Text style={styles.subtitle}>Cultures disponibles (Zone {selectedZone.id})</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 20 }} />
+      ) : (
         <FlatList
-          horizontal
-          data={zones}
+          data={cultures}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.zoneCard, selectedZone?.id === item.id && styles.zoneSelected]}
-              onPress={() => handleZoneSelect(item)}
-            >
-              <Text style={[styles.zoneLabel, selectedZone?.id === item.id && { color: '#fff' }]}>
-                {item.nom}
-              </Text>
+            <TouchableOpacity style={styles.cropCard} onPress={() => handleCropSelect(item)}>
+              {/* Correction : On utilise 'name' car c'est le nom de la colonne SQL */}
+              <Text style={styles.cropName}>{item.name}</Text>
+              {item.scientific_name && (
+                <Text style={styles.scientificName}>{item.scientific_name}</Text>
+              )}
             </TouchableOpacity>
           )}
-          contentContainerStyle={styles.zoneList}
-          showsHorizontalScrollIndicator={false}
+          ListEmptyComponent={<Text style={styles.emptyText}>Aucune donnée trouvée.</Text>}
         />
-      </View>
-
-      {selectedZone && (
-        <>
-          <Text style={styles.subtitle}>Cultures pour : {selectedZone.nom}</Text>
-          {loading ? (
-            <ActivityIndicator size="large" color="#2e7d32" style={{ marginTop: 20 }} />
-          ) : (
-            <FlatList
-              data={cultures}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity style={styles.cropCard} onPress={() => handleCropSelect(item)}>
-                  {/* Correction ici : item.name au lieu de item.nom */}
-                  <Text style={styles.cropName}>{item.name}</Text>
-                  {item.scientific_name && (
-                    <Text style={styles.scientificName}>{item.scientific_name}</Text>
-                  )}
-                </TouchableOpacity>
-              )}
-            />
-          )}
-        </>
       )}
-    </View>
+    </>
+  )}
+</View>
   );
 }
 
