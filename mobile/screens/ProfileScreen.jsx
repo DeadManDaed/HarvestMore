@@ -1,4 +1,4 @@
-// mobile/screens/ProfileScreen.jsx
+// mobile/screens/ProfileScreen.jsx Google version 
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Switch, ActivityIndicator } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
