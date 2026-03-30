@@ -85,6 +85,7 @@ export default function MyCropsScreen({ route, navigation }) {
   };
 
   const renderItem = ({ item }) => (
+  <TouchableOpacity onPress={() => navigation.navigate('CropDetail', { plantation: item })}>
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <Text style={styles.cropTitle}>{item.crops?.name}</Text>
@@ -115,6 +116,7 @@ export default function MyCropsScreen({ route, navigation }) {
         <Text style={styles.none}>Aucun suivi</Text>
       )}
     </View>
+   </TouchableOpacity>
   );
 
   return (
