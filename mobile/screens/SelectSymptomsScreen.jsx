@@ -13,14 +13,15 @@ export default function SelectSymptomsScreen({ route, navigation }) {
 
   useEffect(() => {
     fetchSymptoms();
-  }, []);
+  }, [cropId]);
 
   const fetchSymptoms = async () => {
     setLoading(true);
-    // Récupérer tous les symptômes (ou filtrer par crop_id si vous avez une colonne crop_id)
+    // Récupérer les symptômes associés à la culture sélectionnée
     const { data, error } = await supabase
       .from('symptoms')
       .select('*')
+      .eq('crop_id', cropId)
       .order('severity', { ascending: false });
 
     if (error) {
@@ -155,6 +156,24 @@ export default function SelectSymptomsScreen({ route, navigation }) {
     );
   }
 
+  if (symptoms.length === 0) {
+    return (
+      <View style={styles.container}>
+        <BackHeader title={`Symptômes - ${cropName}`} />
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Aucun symptôme connu pour cette culture.</Text>
+          <Text style={styles.emptySubtext}>Vous pouvez contacter un technicien directement.</Text>
+          <TouchableOpacity 
+            style={styles.contactButton} 
+            onPress={() => navigation.navigate('Conversations')}
+          >
+            <Text style={styles.contactButtonText}>📞 Contacter un technicien</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <BackHeader title={`Symptômes - ${cropName}`} />
@@ -222,5 +241,10 @@ const styles = StyleSheet.create({
     color: '#2e7d32',
     fontWeight: 'bold',
   },
-  buttonContainer: { padding: 15, paddingBottom: 30 }
+  buttonContainer: { padding: 15, paddingBottom: 30 },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+  emptyText: { fontSize: 16, color: '#666', textAlign: 'center', marginBottom: 10 },
+  emptySubtext: { fontSize: 14, color: '#999', textAlign: 'center', marginBottom: 20 },
+  contactButton: { backgroundColor: '#2e7d32', padding: 12, borderRadius: 8, alignItems: 'center' },
+  contactButtonText: { color: '#fff', fontWeight: 'bold' }
 });
