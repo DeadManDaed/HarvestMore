@@ -8,7 +8,8 @@ import {
   StyleSheet, 
   Dimensions,
   Animated,
-  Platform
+  Platform,
+  FlatList
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -17,7 +18,7 @@ const SCREEN_HEIGHT = Dimensions.get('window').height;
 const CAROUSEL_HEIGHT = SCREEN_HEIGHT / 3;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 80+ ASTUCES AGRICOLES ENRICHIES
+// 80+ ASTUCES AGRICOLES ENRICHIES (votre tableau tips reste identique)
 // ═══════════════════════════════════════════════════════════════════════════
 const tips = [
   // GESTION DE L'EAU (10 astuces)
@@ -140,11 +141,11 @@ const tips = [
 // ═══════════════════════════════════════════════════════════════════════════
 export default function HomeScreen({ navigation }) {
   const { user, signOut } = useAuth();
-  
+
   const [currentIndex, setCurrentIndex] = useState(0);
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const scrollViewRef = useRef(null);
+  const flatListRef = useRef(null);
   const autoScrollTimer = useRef(null);
+  const isManualScrolling = useRef(false);
 
   // Auto-scroll toutes les 3.5 secondes
   useEffect(() => {
@@ -154,46 +155,83 @@ export default function HomeScreen({ navigation }) {
         clearInterval(autoScrollTimer.current);
       }
     };
-  }, [currentIndex]);
+  }, []);
 
   const startAutoScroll = () => {
     if (autoScrollTimer.current) {
       clearInterval(autoScrollTimer.current);
     }
-    
+
     autoScrollTimer.current = setInterval(() => {
-      const nextIndex = (currentIndex + 1) % tips.length;
-      scrollToIndex(nextIndex);
+      if (!isManualScrolling.current) {
+        const nextIndex = (currentIndex + 1) % tips.length;
+        scrollToIndex(nextIndex);
+      }
     }, 3500);
   };
 
   const scrollToIndex = (index) => {
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({
-        x: index * SCREEN_WIDTH,
+    if (flatListRef.current) {
+      flatListRef.current.scrollToIndex({
+        index: index,
         animated: true,
+        viewPosition: 0.5
       });
-      setCurrentIndex(index);
     }
   };
 
   const handlePrevious = () => {
     const prevIndex = currentIndex === 0 ? tips.length - 1 : currentIndex - 1;
+    isManualScrolling.current = true;
     scrollToIndex(prevIndex);
+
+    // Réinitialiser le flag après l'animation
+    setTimeout(() => {
+      isManualScrolling.current = false;
+    }, 500);
+
     startAutoScroll(); // Restart timer
   };
 
   const handleNext = () => {
     const nextIndex = (currentIndex + 1) % tips.length;
+    isManualScrolling.current = true;
     scrollToIndex(nextIndex);
+
+    // Réinitialiser le flag après l'animation
+    setTimeout(() => {
+      isManualScrolling.current = false;
+    }, 500);
+
     startAutoScroll(); // Restart timer
   };
 
-  const handleScroll = (event) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / SCREEN_WIDTH);
-    setCurrentIndex(index);
-  };
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    if (viewableItems && viewableItems.length > 0 && !isManualScrolling.current) {
+      setCurrentIndex(viewableItems[0].index);
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+    minimumViewTime: 100
+  }).current;
+
+  const renderTipItem = ({ item: tip, index }) => (
+    <View style={[styles.tipCard, { backgroundColor: tip.color }]}>
+      <View style={styles.tipHeader}>
+        <Text style={styles.tipIcon}>{tip.icon}</Text>
+        <Text style={styles.tipCategory}>{tip.category}</Text>
+      </View>
+      <Text style={styles.tipText}>{tip.text}</Text>
+    </View>
+  );
+
+  const getItemLayout = (data, index) => ({
+    length: SCREEN_WIDTH,
+    offset: SCREEN_WIDTH * index,
+    index,
+  });
 
   return (
     <ScrollView style={styles.container}>
@@ -210,7 +248,7 @@ export default function HomeScreen({ navigation }) {
       {/* CARROUSEL D'ASTUCES */}
       <View style={styles.carouselContainer}>
         <Text style={styles.carouselTitle}>💡 Astuces Agricoles</Text>
-        
+
         {/* Indicateur de position */}
         <Text style={styles.carouselCounter}>
           {currentIndex + 1} / {tips.length}
@@ -226,32 +264,32 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.navButtonText}>‹</Text>
           </TouchableOpacity>
 
-          {/* ScrollView horizontal */}
-          <ScrollView
-            ref={scrollViewRef}
+          {/* FlatList horizontal au lieu de ScrollView */}
+          <FlatList
+            ref={flatListRef}
+            data={tips}
+            renderItem={renderTipItem}
+            keyExtractor={(item, index) => `tip-${index}`}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            getItemLayout={getItemLayout}
+            decelerationRate="fast"
+            snapToAlignment="center"
+            snapToInterval={SCREEN_WIDTH}
             style={styles.carousel}
-          >
-            {tips.map((tip, index) => (
-              <View 
-                key={index} 
-                style={[
-                  styles.tipCard,
-                  { backgroundColor: tip.color }
-                ]}
-              >
-                <View style={styles.tipHeader}>
-                  <Text style={styles.tipIcon}>{tip.icon}</Text>
-                  <Text style={styles.tipCategory}>{tip.category}</Text>
-                </View>
-                <Text style={styles.tipText}>{tip.text}</Text>
-              </View>
-            ))}
-          </ScrollView>
+            contentContainerStyle={styles.carouselContent}
+            onScrollBeginDrag={() => {
+              isManualScrolling.current = true;
+            }}
+            onScrollEndDrag={() => {
+              setTimeout(() => {
+                isManualScrolling.current = false;
+              }, 500);
+            }}
+          />
 
           {/* Bouton Suivant */}
           <TouchableOpacity 
@@ -265,36 +303,21 @@ export default function HomeScreen({ navigation }) {
 
         {/* Points indicateurs */}
         <View style={styles.dotsContainer}>
-          {tips.slice(0, 5).map((_, idx) => {
-            const inputRange = [
-              (idx - 1) * SCREEN_WIDTH,
-              idx * SCREEN_WIDTH,
-              (idx + 1) * SCREEN_WIDTH,
-            ];
-            
-            const dotOpacity = scrollX.interpolate({
-              inputRange,
-              outputRange: [0.3, 1, 0.3],
-              extrapolate: 'clamp',
-            });
-
-            return (
-              <Animated.View
-                key={idx}
-                style={[
-                  styles.dot,
-                  { 
-                    opacity: currentIndex === idx ? 1 : 0.3,
-                    backgroundColor: currentIndex === idx ? '#2e7d32' : '#ccc'
-                  }
-                ]}
-              />
-            );
-          })}
+          {tips.slice(0, 5).map((_, idx) => (
+            <View
+              key={idx}
+              style={[
+                styles.dot,
+                { 
+                  backgroundColor: currentIndex === idx ? '#2e7d32' : '#ccc',
+                  opacity: currentIndex === idx ? 1 : 0.5
+                }
+              ]}
+            />
+          ))}
           {tips.length > 5 && <Text style={styles.dotsMore}>...</Text>}
         </View>
       </View>
-
       {/* DASHBOARD */}
       <View style={styles.dashBoard}>
         <TouchableOpacity 
@@ -345,99 +368,100 @@ export default function HomeScreen({ navigation }) {
 // STYLES
 // ═══════════════════════════════════════════════════════════════════════════
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#f5f5f5' 
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
-  
-  // HEADER
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#2e7d32',
-  },
-  welcome: { 
-    fontSize: 18, 
-    color: '#fff', 
-    fontWeight: 'bold' 
-  },
-  logoutButton: { 
-    backgroundColor: '#d32f2f', 
-    paddingHorizontal: 12, 
-    paddingVertical: 6, 
-    borderRadius: 5 
-  },
-  logoutText: { 
-    color: '#fff', 
-    fontWeight: '600' 
-  },
-
-  // CARROUSEL
-  carouselContainer: {
-    height: CAROUSEL_HEIGHT,
-    marginVertical: 15,
+    padding: 16,
     backgroundColor: '#fff',
-    borderRadius: 15,
-    marginHorizontal: 10,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  welcome: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  logoutButton: {
+    backgroundColor: '#f44336',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  carouselContainer: {
+    marginTop: 16,
+    marginBottom: 16,
   },
   carouselTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#2e7d32',
-    textAlign: 'center',
-    paddingVertical: 10,
-    backgroundColor: '#f1f8e9',
+    marginBottom: 8,
+    paddingHorizontal: 16,
   },
   carouselCounter: {
-    position: 'absolute',
-    top: 12,
-    right: 15,
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
-    backgroundColor: '#fff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    zIndex: 10,
+    marginBottom: 12,
+    paddingHorizontal: 16,
   },
   carouselWrapper: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    zIndex: 10,
+    elevation: 5,
+  },
+  navButtonText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+    lineHeight: 40,
   },
   carousel: {
     flex: 1,
   },
+  carouselContent: {
+    alignItems: 'center',
+  },
   tipCard: {
-    width: SCREEN_WIDTH - 100,
-    marginHorizontal: 5,
+    width: SCREEN_WIDTH - 80,
+    marginHorizontal: 40,
+    minHeight: 180,
+    borderRadius: 16,
     padding: 20,
-    borderRadius: 12,
-    justifyContent: 'center',
-    minHeight: CAROUSEL_HEIGHT - 80,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tipHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   tipIcon: {
-    fontSize: 48,
-    marginRight: 15,
+    fontSize: 28,
+    marginRight: 12,
   },
   tipCategory: {
     fontSize: 16,
@@ -445,7 +469,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     backgroundColor: 'rgba(0,0,0,0.2)',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 4,
     borderRadius: 20,
   },
   tipText: {
@@ -454,27 +478,11 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontWeight: '500',
   },
-  navButton: {
-    width: 40,
-    height: 40,
-    backgroundColor: 'rgba(46, 125, 50, 0.9)',
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 5,
-  },
-  navButtonText: {
-    fontSize: 32,
-    color: '#fff',
-    fontWeight: 'bold',
-    marginTop: -4,
-  },
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 10,
-    backgroundColor: '#f1f8e9',
+    marginTop: 16,
   },
   dot: {
     width: 8,
@@ -483,11 +491,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   dotsMore: {
-    fontSize: 16,
+    fontSize: 12,
     color: '#666',
-    marginLeft: 5,
+    marginLeft: 4,
   },
-
   // DASHBOARD
   dashBoard: {
     flexDirection: 'row',
@@ -522,5 +529,5 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     fontWeight: '500',
     color: '#333'
-  },
+  }, 
 });
