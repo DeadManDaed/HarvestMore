@@ -10,13 +10,81 @@ export default function MyCropsScreen({ route, navigation }) {
   const { mode } = route.params || { mode: 'management' };
   
   const [plantations, setPlantations] = useState([]);
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
+// À ajouter dans MyCropsScreen.jsx
+import * as Location from 'expo-location';
 
-  const [formData, setFormData] = useState({
-    crop_id: null, crop_name: '', area_size: '', plant_count: '',
-    location_name: '', estimated_yield: '', initial_tech: ''
-  });
+// ... dans le composant
+const [isModalVisible, setModalVisible] = useState(false);
+const [formData, setFormData] = useState({
+  crop_id: null,
+  crop_name: '',
+  area_size: '',
+  plant_count: '',
+  planting_date: '',
+  location_name: '',
+  estimated_yield: '',
+  latitude: null,
+  longitude: null,
+  interventions: []
+});
+
+const getCurrentLocation = async () => {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert('Permission refusée', 'Activez la localisation pour géolocaliser votre champ.');
+    return;
+  }
+
+  const location = await Location.getCurrentPositionAsync({});
+  const address = await Location.reverseGeocodeAsync(location.coords);
+  const locationName = address[0]?.name || address[0]?.street || 
+    `${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`;
+
+  setFormData(prev => ({
+    ...prev,
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+    location_name: locationName
+  }));
+};
+
+const savePlantation = async () => {
+  if (!formData.crop_id) {
+    Alert.alert('Erreur', 'Veuillez sélectionner une culture');
+    return;
+  }
+
+  setLoading(true);
+  const { error } = await supabase
+    .from('user_plantations')
+    .insert({
+      user_id: user.id,
+      crop_id: formData.crop_id,
+      area_size: parseFloat(formData.area_size) || null,
+      plant_count: parseInt(formData.plant_count) || null,
+      planting_date: formData.planting_date || null,
+      location_name: formData.location_name || null,
+      latitude: formData.latitude || null,
+      longitude: formData.longitude || null,
+      estimated_yield: parseFloat(formData.estimated_yield) || null,
+      interventions: [],
+      status: 'active'
+    });
+
+  if (error) {
+    Alert.alert('Erreur', error.message);
+  } else {
+    Alert.alert('Succès', 'Plantation ajoutée');
+    setModalVisible(false);
+    setFormData({
+      crop_id: null, crop_name: '', area_size: '', plant_count: '',
+      planting_date: '', location_name: '', estimated_yield: '',
+      latitude: null, longitude: null, interventions: []
+    });
+    fetchPlantations();
+  }
+  setLoading(false);
+};
 
   useEffect(() => {
     fetchPlantations();
