@@ -7,17 +7,12 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function MyCropsScreen({ route, navigation }) {
   const { user } = useAuth();
+  const { mode } = route.params || { mode: 'management' }; // 'management' ou 'selection_diagnostic'
+  
   const [plantations, setPlantations] = useState([]);
-  const [isModalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [locationPermission, setLocationPermission] = useState(null);
 
-  const [formData, setFormData] = useState({
-    crop_id: null, crop_name: '', area_size: '', plant_count: '',
-    location_name: '', estimated_yield: '', initial_tech: ''
-  });
-
-  // 1. Demander la permission GPS dès le chargement
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -25,17 +20,6 @@ export default function MyCropsScreen({ route, navigation }) {
     })();
     fetchPlantations();
   }, []);
-
-  useEffect(() => {
-    if (route.params?.selectedCropId) {
-      setFormData(prev => ({ 
-        ...prev, 
-        crop_id: route.params.selectedCropId,
-        crop_name: route.params.selectedCropName 
-      }));
-      setModalVisible(true);
-    }
-  }, [route.params]);
 
   const fetchPlantations = async () => {
     const { data, error } = await supabase
@@ -46,131 +30,101 @@ export default function MyCropsScreen({ route, navigation }) {
     if (!error) setPlantations(data);
   };
 
-  const handleSave = async () => {
-    if (!formData.crop_id || !formData.area_size) {
-      Alert.alert("Champs requis", "La culture et la superficie sont obligatoires.");
-      return;
-    }
+  // Titre dynamique selon l'origine
+  const screenTitle = mode === 'selection_diagnostic' 
+    ? "Quelle plantation diagnostiquer ?" 
+    : "Mes Plantations";
 
-    setLoading(true);
-    try {
-      let coords = { latitude: null, longitude: null };
-      
-      // On ne demande le GPS que si on a la permission
-      if (locationPermission) {
-        let loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        coords.latitude = loc.coords.latitude;
-        coords.longitude = loc.coords.longitude;
-      }
-
-      const { error } = await supabase.from('user_plantations').insert([{
-        user_id: user.id,
-        crop_id: formData.crop_id,
-        area_size: parseFloat(formData.area_size),
-        plant_count: parseInt(formData.plant_count) || 0,
-        location_name: formData.location_name,
-        estimated_yield: parseFloat(formData.estimated_yield) || 0,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        interventions: formData.initial_tech ? [{
-          date: new Date().toISOString(),
-          type: 'Préparation',
-          detail: formData.initial_tech
-        }] : []
-      }]);
-
-      if (error) throw error;
-      Alert.alert("Succès", "Plantation enregistrée");
-      setModalVisible(false);
-      fetchPlantations();
-    } catch (err) {
-      Alert.alert("Erreur", "Impossible d'enregistrer la localisation. Vérifiez votre GPS.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const renderItem = ({ item }) => (
+    <TouchableOpacity 
+      style={[styles.card, mode === 'selection_diagnostic' && styles.cardHighlight]}
+      onPress={() => {
+        if (mode === 'selection_diagnostic') {
+          // Cas A : On part au diagnostic avec les infos de la parcelle
+          navigation.navigate('SelectSymptoms', { 
+            cropId: item.crop_id, 
+            plantationId: item.id 
+          });
+        } else {
+          // Cas B : Consultation classique
+          navigation.navigate('CropDetail', { plantation: item });
+        }
+      }}
+    >
+      <View style={styles.cardHeader}>
+        <Text style={styles.cropTitle}>{item.crops?.name}</Text>
+        {mode === 'selection_diagnostic' && (
+          <View style={styles.selectBadge}><Text style={styles.selectBadgeText}>SÉLECTIONNER</Text></View>
+        )}
+      </View>
+      <Text style={styles.locationText}>📍 {item.location_name || 'Champ non nommé'}</Text>
+      <Text style={styles.detailsText}>{item.area_size} Ha • {item.plant_count} plants</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
-      {/* HEADER D'ACTION RAPIDE */}
-      <View style={styles.quickActionBox}>
-        <Text style={styles.quickActionTitle}>Un problème sur une culture ?</Text>
+      <Text style={styles.headerTitle}>{screenTitle}</Text>
+
+      {/* Si on vient du Diagnostic, on permet de sauter cette étape pour un diagnostic libre */}
+      {mode === 'selection_diagnostic' && (
         <TouchableOpacity 
-          style={styles.diagnosticBtn}
+          style={styles.freeDiagBtn}
           onPress={() => navigation.navigate('SelectCrop', { mode: 'diagnostic' })}
         >
-          <Text style={styles.diagnosticBtnText}>Lancer un diagnostic rapide</Text>
+          <Text style={styles.freeDiagText}>Faire un diagnostic pour une autre culture</Text>
         </TouchableOpacity>
-      </View>
+      )}
 
-      <Text style={styles.listTitle}>Mes parcelles enregistrées ({plantations.length})</Text>
+      {plantations.length === 0 && !loading ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>Vous n'avez pas encore de plantation enregistrée.</Text>
+          {mode === 'selection_diagnostic' && (
+            <TouchableOpacity 
+              style={styles.primaryBtn}
+              onPress={() => navigation.navigate('SelectCrop', { mode: 'diagnostic' })}
+            >
+              <Text style={styles.primaryBtnText}>Choisir une culture dans le catalogue</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : (
+        <FlatList 
+          data={plantations} 
+          keyExtractor={i => i.id} 
+          renderItem={renderItem}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
+      )}
 
-      <FlatList 
-        data={plantations} 
-        keyExtractor={i => i.id} 
-        renderItem={({item}) => (
-          <TouchableOpacity 
-            style={styles.card}
-            onPress={() => navigation.navigate('CropDetail', { plantation: item })}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cropTitle}>{item.crops?.name}</Text>
-              <TouchableOpacity 
-                 style={styles.miniDiagBtn}
-                 onPress={() => navigation.navigate('SelectSymptoms', { cropId: item.crop_id, plantationId: item.id })}
-              >
-                <Text style={styles.miniDiagText}>Diagnostiquer</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.locationText}>📍 {item.location_name || 'Position enregistrée'}</Text>
-          </TouchableOpacity>
-        )} 
-      />
-
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('SelectCrop', { mode: 'register' })}>
+      {/* Le bouton + sert toujours à ajouter une plantation réelle */}
+      <TouchableOpacity 
+        style={styles.fab} 
+        onPress={() => navigation.navigate('SelectCrop', { mode: 'register' })}
+      >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
-
-      {/* MODAL D'AJOUT (Inchangé mais plus fluide grâce au useEffect GPS) */}
-      <Modal visible={isModalVisible} animationType="slide">
-         <ScrollView style={styles.modalBody}>
-            <Text style={styles.modalTitle}>Nouvelle Plantation</Text>
-            {!locationPermission && (
-              <View style={styles.warningBox}>
-                <Text style={styles.warningText}>⚠️ Le GPS est désactivé. La parcelle ne sera pas cartographiée.</Text>
-              </View>
-            )}
-            {/* ... Reste des inputs TextInput ... */}
-            <TouchableOpacity onPress={handleSave} style={styles.btnSave} disabled={loading}>
-              <Text style={{color: '#fff'}}>{loading ? 'Enregistrement...' : 'Confirmer'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setModalVisible(false)} style={{marginTop: 20, alignItems: 'center'}}>
-              <Text style={{color: '#666'}}>Annuler</Text>
-            </TouchableOpacity>
-         </ScrollView>
-      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0f2f5', padding: 10 },
-  quickActionBox: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 20, elevation: 3, borderLeftWidth: 5, borderLeftColor: '#ff9800' },
-  quickActionTitle: { fontSize: 14, fontWeight: 'bold', color: '#555', marginBottom: 10 },
-  diagnosticBtn: { backgroundColor: '#ff9800', padding: 12, borderRadius: 8, alignItems: 'center' },
-  diagnosticBtnText: { color: '#fff', fontWeight: 'bold' },
-  listTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 10, color: '#2e7d32' },
-  card: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 10 },
+  container: { flex: 1, backgroundColor: '#f5f7fa', padding: 15 },
+  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#1b5e20', marginBottom: 15 },
+  card: { backgroundColor: '#fff', borderRadius: 12, padding: 15, marginBottom: 12, elevation: 2 },
+  cardHighlight: { borderColor: '#2e7d32', borderWidth: 1 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cropTitle: { fontSize: 18, fontWeight: 'bold' },
-  miniDiagBtn: { backgroundColor: '#e8f5e9', padding: 6, borderRadius: 6 },
-  miniDiagText: { color: '#2e7d32', fontSize: 12, fontWeight: 'bold' },
-  locationText: { color: '#888', fontSize: 12, marginTop: 5 },
-  fab: { position: 'absolute', bottom: 20, right: 20, backgroundColor: '#2e7d32', width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', elevation: 5 },
-  fabText: { color: '#fff', fontSize: 30 },
-  warningBox: { backgroundColor: '#fff3e0', padding: 10, borderRadius: 8, marginBottom: 15 },
-  warningText: { color: '#e65100', fontSize: 12 },
-  modalBody: { padding: 20 },
-  modalTitle: { fontSize: 22, fontWeight: 'bold', color: '#2e7d32', marginBottom: 20 },
-  btnSave: { backgroundColor: '#2e7d32', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10 }
+  selectBadge: { backgroundColor: '#2e7d32', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
+  selectBadgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+  locationText: { color: '#666', fontSize: 13, marginTop: 5 },
+  detailsText: { color: '#999', fontSize: 12, marginTop: 2 },
+  freeDiagBtn: { backgroundColor: '#fff', padding: 15, borderRadius: 12, marginBottom: 20, borderStyle: 'dashed', borderWidth: 1, borderColor: '#2e7d32', alignItems: 'center' },
+  freeDiagText: { color: '#2e7d32', fontWeight: 'bold' },
+  emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  emptyText: { textAlign: 'center', color: '#666', marginBottom: 20 },
+  primaryBtn: { backgroundColor: '#2e7d32', padding: 15, borderRadius: 10, width: '100%', alignItems: 'center' },
+  primaryBtnText: { color: '#fff', fontWeight: 'bold' },
+  fab: { position: 'absolute', bottom: 30, right: 30, backgroundColor: '#2e7d32', width: 65, height: 65, borderRadius: 33, justifyContent: 'center', alignItems: 'center', elevation: 5 },
+  fabText: { color: '#fff', fontSize: 35 }
 });
