@@ -69,13 +69,114 @@ export const cropDiagnosticsDatabase = {
               ]
             }
           ]
+        },
+        {
+          id: "niebe_01",
+          nom: "Niébé (Haricot cornille)",
+          pathologies: [
+            {
+              nom: "Foreur des gousses",
+              type: "Ravageur",
+              conseil: "Traiter à la floraison avec un insecticide biologique.",
+              produit_cafcoop: { nom: "Insecticide Bio", slug: "protection-niebe" },
+              symptomes: [
+                { id: "gousses_perforees", desc: "Gousses perforées, graines dévorées de l'intérieur", poids: 1.0 }
+              ]
+            }
+          ]
+        },
+        {
+          id: "sesame_01",
+          nom: "Sésame",
+          pathologies: [
+            {
+              nom: "Bactériose du sésame",
+              type: "Bactérie",
+              conseil: "Rotation des cultures. Utiliser des semences certifiées.",
+              produit_cafcoop: { nom: "Bactéricide Cuivre", slug: "fongicide-contact" },
+              symptomes: [
+                { id: "taches_angulaires", desc: "Feuilles enroulées et couvertes de petites taches angulaires gorgées d'eau", poids: 1.0 }
+              ]
+            }
+          ]
+        },
+        {
+          id: "riz_01",
+          nom: "Riz irrigué",
+          pathologies: [
+            {
+              nom: "Pyriculariose",
+              type: "Fongique",
+              conseil: "Éviter les excès d'azote. Traiter avec un fongicide spécifique.",
+              produit_cafcoop: { nom: "Fongicide Systémique", slug: "soins-riz" },
+              symptomes: [
+                { id: "taches_losangiques", desc: "Taches losangiques brunes avec centre gris sur les feuilles", poids: 1.0 }
+              ]
+            }
+          ]
+        },
+        {
+          id: "arachide_01",
+          nom: "Arachide",
+          pathologies: [
+            {
+              nom: "Rosette virale",
+              type: "Viral",
+              conseil: "Utiliser des semences résistantes. Lutter contre les pucerons.",
+              produit_cafcoop: { nom: "Insecticide Anti-Puceron", slug: "protection-arachide" },
+              symptomes: [
+                { id: "feuilles_jaunes_naines", desc: "Feuilles jaunes, plante naine en rosette", poids: 1.0 }
+              ]
+            }
+          ]
+        },
+        {
+          id: "pasteque_01",
+          nom: "Pastèque",
+          pathologies: [
+            {
+              nom: "Oïdium",
+              type: "Fongique",
+              conseil: "Traiter avec un fongicide soufré. Assurer une bonne aération.",
+              produit_cafcoop: { nom: "Fongicide Soufre", slug: "fongicide-contact" },
+              symptomes: [
+                { id: "feutrage_blanc", desc: "Feutrage blanc poudreux sur les feuilles", poids: 1.0 }
+              ]
+            }
+          ]
+        },
+        {
+          id: "ail_01",
+          nom: "Ail",
+          pathologies: [
+            {
+              nom: "Pourriture blanche",
+              type: "Fongique",
+              conseil: "Rotation longue (6 ans). Utiliser des semences saines.",
+              produit_cafcoop: { nom: "Fongicide Bio", slug: "traitement-semences" },
+              symptomes: [
+                { id: "pourriture_blanche_base", desc: "Pourriture blanche à la base du bulbe avec petits grains noirs", poids: 1.0 }
+              ]
+            }
+          ]
+        },
+        {
+          id: "gombo_01",
+          nom: "Gombo",
+          pathologies: [
+            {
+              nom: "Virus de l'enroulement foliaire",
+              type: "Viral",
+              conseil: "Lutter contre les aleurodes. Variétés résistantes.",
+              produit_cafcoop: { nom: "Insecticide Anti-Aleurode", slug: "protection-gombo" },
+              symptomes: [
+                { id: "nervures_jaunies", desc: "Nervures des feuilles jaunies et épaissies", poids: 1.0 }
+              ]
+            }
+          ]
         }
-        // Ajoutez ici toutes les autres cultures de la ZAE_1 (Niébé, Sésame, Riz, Arachide, Pastèque, Ail, Gombo)
-        // et toutes les autres zones (ZAE_2 à ZAE_5) avec leurs cultures et pathologies.
-        // Pour éviter de surcharger ce message, je vous fournirai un fichier complet à part si nécessaire.
       ]
     },
-    // Exemple pour ZAE_3 (Hauts Plateaux)
     {
       id: "ZAE_3",
       nom: "Hauts Plateaux (Ouest/Nord-Ouest)",
@@ -112,10 +213,8 @@ export const cropDiagnosticsDatabase = {
             }
           ]
         }
-        // Ajoutez ici les autres cultures de la ZAE_3
       ]
     },
-    // Exemple pour ZAE_5 (Forêt Bimodale)
     {
       id: "ZAE_5",
       nom: "Forêt Dense Bimodale (Centre/Sud/Est)",
@@ -162,7 +261,6 @@ export const cropDiagnosticsDatabase = {
             }
           ]
         }
-        // Ajoutez ici les autres cultures de la ZAE_5
       ]
     }
   ]
