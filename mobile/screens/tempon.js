@@ -320,12 +320,55 @@ export default function HomeScreen({ navigation }) {
           {tips.length > 5 && <Text style={styles.dotsMore}>...</Text>}
         </View>
       </View>
+      {/* DASHBOARD */}
+      <View style={styles.dashBoard}>
+        <TouchableOpacity 
+          style={styles.dashTile} 
+          onPress={() => navigation.navigate('MyCrops', { mode: 'selection_diagnostic' })}
+        >
+          <Text style={styles.tileIcon}>🔍</Text>
+          <Text style={styles.tileLabel}>Diagnostic</Text>
+        </TouchableOpacity>
 
-      {/* Le reste de votre contenu... */}
+        <TouchableOpacity 
+          style={styles.dashTile} 
+          onPress={() => navigation.navigate('Catalogue')}
+        >
+          <Text style={styles.tileIcon}>🛒</Text>
+          <Text style={styles.tileLabel}>Catalogue</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.dashTile} 
+          onPress={() => navigation.navigate('Cart')}
+        >
+          <Text style={styles.tileIcon}>🛍️</Text>
+          <Text style={styles.tileLabel}>Panier</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.dashTile} 
+          onPress={() => navigation.navigate('Conversations')}
+        >
+          <Text style={styles.tileIcon}>💬</Text>
+          <Text style={styles.tileLabel}>Messages</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.dashTile} 
+          onPress={() => navigation.navigate('Profile')}
+        >
+          <Text style={styles.tileIcon}>👤</Text>
+          <Text style={styles.tileLabel}>Profil</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// STYLES
+// ═══════════════════════════════════════════════════════════════════════════
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -454,4 +497,39 @@ const styles = StyleSheet.create({
     color: '#666',
     marginLeft: 4,
   },
+  // DASHBOARD
+  dashBoard: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    marginHorizontal: 10,
+    marginTop: 10,
+  },
+  dashTile: {
+    width: '40%',
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    paddingVertical: 20,
+    marginVertical: 10,
+    borderRadius: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  tileIcon: { 
+    fontSize: 32, 
+    marginBottom: 8 
+  },
+  tileLabel: { 
+    fontSize: 16, 
+    fontWeight: '500',
+    color: '#333'
+  }, 
 });
