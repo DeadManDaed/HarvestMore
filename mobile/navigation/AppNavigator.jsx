@@ -21,6 +21,9 @@ import SelectCropScreen from '../screens/SelectCropScreen';
 import SelectSymptomsScreen from '../screens/SelectSymptomsScreen';
 import MyCropsScreen from '../screens/MyCropsScreen';
 import CropDetailScreen from '../screens/CropDetailScreen';
+import CatalogueScreen from '../screens/CatalogueScreen';
+import CartScreen from '../screens/CartScreen';
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // IMPORTS SCREENS ADMIN
@@ -101,6 +104,16 @@ export default function AppNavigator() {
               name="Conversations" 
               component={ConversationsScreen}
               options={{ title: 'Conversations' }}
+            />
+            <Stack.Screen 
+              name="Catalogue" 
+              component={CatalogueScreen}
+              options={{ title: 'Catalogue' }}
+            />
+            <Stack.Screen 
+              name="Cart" 
+              component={CartScreen}
+              options={{ title: 'Panier' }}
             />
             
             {/* ───────────────────────────────────────────────────────────── */}
