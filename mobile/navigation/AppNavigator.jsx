@@ -19,8 +19,8 @@ import DiagnosticScreen from '../screens/DiagnosticScreen';
 import DiagnosticResultScreen from '../screens/DiagnosticResultScreen';
 import SelectCropScreen from '../screens/SelectCropScreen';
 import SelectSymptomsScreen from '../screens/SelectSymptomsScreen';
-import MyCropsScreen from './screens/MyCropsScreen';
-import CropDetailScreen from './screens/CropDetailScreen';
+import MyCropsScreen from '../screens/MyCropsScreen';
+import CropDetailScreen from '../screens/CropDetailScreen';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // IMPORTS SCREENS ADMIN
