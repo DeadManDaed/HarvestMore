@@ -28,21 +28,28 @@ export default function SelectCropScreen({ navigation }) {
     setLoading(true);
     // 1. On utilise .contains car la colonne 'zone' est un ARRAY dans ta base
     // 2. On filtre par le nom de la zone (ou l'id si ton array contient des IDs)
-    const { data, error } = await supabase
-      .from('crops')
-      .select('*')
-      .contains('zone', [zone.nom]); 
+     /**
+      *  * Correction logique : 
+       * 1. Ta colonne s'appelle 'zone' (et non 'zone_id').
+        * 2. C'est un ARRAY qui contient l'ID sous forme de chaîne (ex: ["1"]).
+         * 3. On utilise .contains() pour chercher l'ID converti en string dans ce tableau.
+          */
+          const { data, error } = await supabase
+            .from('crops')
+              .select('*')
+                .contains('zone', [zoneId.toString()]); 
 
-    if (error) {
-      console.error(error);
-      Alert.alert("Erreur Supabase", error.message); 
-    } else {
-      if (data.length === 0) {
-        Alert.alert("Info", `Aucune culture trouvée pour la zone : ${zone.nom}`);
-      }
-      setCultures(data);
-    }
-    setLoading(false);
+                if (error) {
+                  console.error(error);
+                    Alert.alert("Erreur Supabase", error.message); 
+                    } else {
+                      if (data && data.length === 0) {
+                          Alert.alert("Info", "Aucune culture n'est liée à cet ID de zone dans la table 'crops'.");
+                            }
+                              setCultures(data || []);
+                              }
+                              setLoading(false);
+      */
   };
 
   const handleZoneSelect = (zone) => {
