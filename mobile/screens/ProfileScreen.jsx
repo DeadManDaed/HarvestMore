@@ -1,5 +1,4 @@
-//mobile/screens/ProfileScreen.jsx
-
+// mobile/screens/ProfileScreen.jsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Switch, ActivityIndicator } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,12 +6,11 @@ import { supabase } from '../lib/supabase';
 
 export default function ProfileScreen() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  
-  // Données de formulaire
+
+  // Données
   const [formData, setFormData] = useState({
     full_name: '',
     username: '',
@@ -21,50 +19,69 @@ export default function ProfileScreen() {
     department: '',
     sub_prefecture: '',
     village: '',
+    allow_farmer_contact: false,
     email_notifications: true,
     push_notifications: true
   });
 
-  // Options pour les sélecteurs (à remplacer par des données dynamiques plus tard)
+  const [allCrops, setAllCrops] = useState([]); // Liste totale de la DB
+  const [userCropIds, setUserCropIds] = useState([]); // IDs des cultures de l'utilisateur
+
   const regions = ['Extrême-Nord', 'Nord', 'Adamaoua', 'Nord-Ouest', 'Ouest', 'Littoral', 'Centre', 'Sud-Ouest', 'Sud', 'Est'];
-  const departments = {
-    'Centre': ['Mfoundi', 'Mefou', 'Nyong-et-Kellé', 'Lekié', 'Haute-Sanaga'],
-    'Littoral': ['Wouri', 'Nkam', 'Moungo', 'Sanaga-Maritime'],
-    // Ajoutez les autres régions...
-  };
 
   useEffect(() => {
-    fetchProfile();
+    fetchInitialData();
   }, []);
 
-  const fetchProfile = async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    if (error) console.error(error);
-    else {
-      setProfile(data);
-      setFormData({
-        full_name: data.full_name || '',
-        username: data.username || '',
-        phone: data.phone || '',
-        region: data.region || '',
-        department: data.department || '',
-        sub_prefecture: data.sub_prefecture || '',
-        village: data.village || '',
-allow_farmer_contact: data.allow_farmer_contact || false,
-        email_notifications: data.notification_preferences?.email ?? true,
-        push_notifications: data.notification_preferences?.push ?? true
-      });
+  const fetchInitialData = async () => {
+    setLoading(true);
+    try {
+      // 1. Charger le profil
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      
+      // 2. Charger TOUTES les cultures (chargement unique comme tu l'as suggéré)
+      const { data: crops } = await supabase.from('crops').select('id, name').order('name');
+      
+      // 3. Charger les cultures de l'utilisateur
+      const { data: myCrops } = await supabase.from('user_crops').select('crop_id').eq('user_id', user.id);
+
+      if (profile) {
+        setFormData({
+          full_name: profile.full_name || '',
+          username: profile.username || '',
+          phone: profile.phone || '',
+          region: profile.region || '',
+          department: profile.department || '',
+          sub_prefecture: profile.sub_prefecture || '',
+          village: profile.village || '',
+          allow_farmer_contact: profile.allow_farmer_contact || false,
+          email_notifications: profile.notification_preferences?.email ?? true,
+          push_notifications: profile.notification_preferences?.push ?? true
+        });
+      }
+      
+      setAllCrops(crops || []);
+      setUserCropIds(myCrops?.map(c => c.crop_id) || []);
+
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const toggleCrop = (cropId) => {
+    if (!editMode) return;
+    setUserCropIds(prev => 
+      prev.includes(cropId) ? prev.filter(id => id !== cropId) : [...prev, cropId]
+    );
   };
 
   const handleSave = async () => {
     setSaving(true);
-    const updates = {
+    
+    // Updates Profil
+    const profileUpdates = {
       full_name: formData.full_name,
       username: formData.username,
       phone: formData.phone,
@@ -72,210 +89,105 @@ allow_farmer_contact: data.allow_farmer_contact || false,
       department: formData.department,
       sub_prefecture: formData.sub_prefecture,
       village: formData.village,
+      allow_farmer_contact: formData.allow_farmer_contact,
       notification_preferences: {
         email: formData.email_notifications,
         push: formData.push_notifications,
-        sms: false
       },
       updated_at: new Date()
     };
 
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', user.id);
+    try {
+      // 1. Sauvegarde profil
+      await supabase.from('profiles').update(profileUpdates).eq('id', user.id);
 
-    if (error) {
-      Alert.alert('Erreur', error.message);
-    } else {
-      Alert.alert('Succès', 'Profil mis à jour');
+      // 2. Mise à jour des cultures (On supprime tout et on réinsère - méthode simple)
+      await supabase.from('user_crops').delete().eq('user_id', user.id);
+      
+      if (userCropIds.length > 0) {
+        const inserts = userCropIds.map(id => ({ user_id: user.id, crop_id: id }));
+        await supabase.from('user_crops').insert(inserts);
+      }
+
+      Alert.alert('Succès', 'Profil et cultures mis à jour');
       setEditMode(false);
-      fetchProfile();
+    } catch (err) {
+      Alert.alert('Erreur', err.message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
-  const renderField = (label, value, field, type = 'text') => {
-    if (!editMode) {
-      return (
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>{label}</Text>
-          <Text style={styles.infoValue}>{value || 'Non renseigné'}</Text>
-        </View>
-      );
-    }
-    
-    if (type === 'select' && field === 'region') {
-      return (
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>{label}</Text>
-          <View style={styles.selectContainer}>
-            {regions.map(region => (
-              <TouchableOpacity
-                key={region}
-                style={[styles.selectOption, formData.region === region && styles.selectOptionActive]}
-                onPress={() => {
-                  setFormData({ ...formData, region, department: '', sub_prefecture: '' });
-                }}
-              >
-                <Text style={formData.region === region ? styles.selectOptionTextActive : styles.selectOptionText}>
-                  {region}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      );
-    }
-    
-    if (type === 'select' && field === 'department' && formData.region) {
-      const depts = departments[formData.region] || [];
-      return (
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>{label}</Text>
-          <View style={styles.selectContainer}>
-            {depts.map(dept => (
-              <TouchableOpacity
-                key={dept}
-                style={[styles.selectOption, formData.department === dept && styles.selectOptionActive]}
-                onPress={() => setFormData({ ...formData, department: dept })}
-              >
-                <Text style={formData.department === dept ? styles.selectOptionTextActive : styles.selectOptionText}>
-                  {dept}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      );
-    }
-    
-    return (
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>{label}</Text>
-        <TextInput
-          style={styles.input}
-          value={formData[field]}
-          onChangeText={(text) => setFormData({ ...formData, [field]: text })}
-          placeholder={`Saisir ${label.toLowerCase()}`}
-        />
-      </View>
-    );
-  };
-
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#2e7d32" />
-      </View>
-    );
-  }
+  // ... (Garder tes fonctions renderField et styles existants)
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Mon profil</Text>
-        {!editMode ? (
-          <TouchableOpacity style={styles.editButton} onPress={() => setEditMode(true)}>
-            <Text style={styles.editButtonText}>Modifier</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setEditMode(false)}>
-              <Text style={styles.cancelButtonText}>Annuler</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={saving}>
-              <Text style={styles.saveButtonText}>{saving ? 'Enregistrement...' : 'Enregistrer'}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <TouchableOpacity 
+          style={styles.editButton} 
+          onPress={editMode ? handleSave : () => setEditMode(true)}
+          disabled={saving}
+        >
+          <Text style={styles.editButtonText}>
+            {saving ? '...' : editMode ? 'Enregistrer' : 'Modifier'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
+      {/* Section Infos Personnelles & Localisation (identique à ton code) */}
+      
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Informations personnelles</Text>
-        {renderField('Nom complet', formData.full_name, 'full_name')}
-        {renderField('Nom d\'utilisateur', formData.username, 'username')}
-        {renderField('Téléphone', formData.phone, 'phone')}
-      </View>
+        <Text style={styles.sectionTitle}>Mes Cultures</Text>
+        <Text style={styles.helperText}>
+          {editMode ? "Sélectionnez les cultures présentes dans votre exploitation :" : "Cultures enregistrées :"}
+        </Text>
+        
+        <View style={styles.cropsGrid}>
+          {allCrops.map(crop => {
+            const isSelected = userCropIds.includes(crop.id);
+            if (!editMode && !isSelected) return null; // Cache les non-sélectionnés hors édition
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Localisation</Text>
-        {renderField('Région', formData.region, 'region', 'select')}
-        {formData.region && renderField('Département', formData.department, 'department', 'select')}
-        {renderField('Arrondissement', formData.sub_prefecture, 'sub_prefecture')}
-        {renderField('Village / Quartier', formData.village, 'village')}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Notifications</Text>
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Notifications par email</Text>
-          <Switch
-            value={formData.email_notifications}
-            onValueChange={(val) => setFormData({ ...formData, email_notifications: val })}
-            disabled={!editMode}
-            trackColor={{ false: '#767577', true: '#2e7d32' }}
-          />
-        </View>
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Notifications push</Text>
-          <Switch
-            value={formData.push_notifications}
-            onValueChange={(val) => setFormData({ ...formData, push_notifications: val })}
-            disabled={!editMode}
-            trackColor={{ false: '#767577', true: '#2e7d32' }}
-          />
+            return (
+              <TouchableOpacity
+                key={crop.id}
+                style={[styles.cropTag, isSelected && styles.cropTagSelected]}
+                onPress={() => toggleCrop(crop.id)}
+              >
+                <Text style={[styles.cropTagText, isSelected && styles.cropTagTextSelected]}>
+                  {crop.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+          {!editMode && userCropIds.length === 0 && (
+            <Text style={styles.emptyText}>Aucune culture renseignée.</Text>
+          )}
         </View>
       </View>
-{profile?.role === 'farmer' && (
-  <View style={styles.section}>
-    <Text style={styles.sectionTitle}>Visibilité</Text>
-    <View style={styles.switchRow}>
-      <Text style={styles.switchLabel}>Permettre à d’autres agriculteurs de me contacter</Text>
-      <Switch
-        value={formData.allow_farmer_contact}
-        onValueChange={(val) => setFormData({ ...formData, allow_farmer_contact: val })}
-        disabled={!editMode}
-        trackColor={{ false: '#767577', true: '#2e7d32' }}
-      />
-    </View>
-  </View>
-)}
+
+      {/* Section Notifications & Visibilité (identique à ton code) */}
+      <View style={{ height: 40 }} /> 
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#2e7d32',
+  // ... tes styles existants ...
+  helperText: { fontSize: 12, color: '#666', marginBottom: 10 },
+  cropsGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  cropTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#2e7d32',
+    marginRight: 8,
+    marginBottom: 8,
+    backgroundColor: '#fff'
   },
-  title: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
-  editButton: { backgroundColor: '#fff', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 5 },
-  editButtonText: { color: '#2e7d32', fontWeight: 'bold' },
-  actionButtons: { flexDirection: 'row' },
-  cancelButton: { backgroundColor: '#d32f2f', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 5, marginRight: 10 },
-  cancelButtonText: { color: '#fff' },
-  saveButton: { backgroundColor: '#fff', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 5 },
-  saveButtonText: { color: '#2e7d32', fontWeight: 'bold' },
-  section: { backgroundColor: '#fff', marginTop: 10, padding: 15 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#2e7d32' },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  infoLabel: { fontSize: 14, color: '#666' },
-  infoValue: { fontSize: 14, color: '#333', fontWeight: '500' },
-  inputGroup: { marginBottom: 15 },
-  inputLabel: { fontSize: 14, color: '#666', marginBottom: 5 },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, fontSize: 14, backgroundColor: '#fff' },
-  selectContainer: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 5 },
-  selectOption: { backgroundColor: '#f0f0f0', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginRight: 8, marginBottom: 8 },
-  selectOptionActive: { backgroundColor: '#2e7d32' },
-  selectOptionText: { color: '#333', fontSize: 12 },
-  selectOptionTextActive: { color: '#fff', fontSize: 12 },
-  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  switchLabel: { fontSize: 14, color: '#333' }
+  cropTagSelected: { backgroundColor: '#2e7d32' },
+  cropTagText: { color: '#2e7d32', fontSize: 13 },
+  cropTagTextSelected: { color: '#fff' },
+  emptyText: { fontStyle: 'italic', color: '#999' }
 });
