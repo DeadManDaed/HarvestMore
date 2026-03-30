@@ -62,7 +62,8 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       <View style={styles.dashBoard}>
-        <TouchableOpacity style={styles.dashTile} onPress={handleDiagnostic}>
+        <TouchableOpacity style={styles.dashTile} onPress={() => navigation.navigate('MyCrops', { mode: 'selection_diagnostic' })}
+>
           <Text style={styles.tileIcon}>🔍</Text>
           <Text style={styles.tileLabel}>Diagnostic</Text>
         </TouchableOpacity>
