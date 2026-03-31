@@ -26,6 +26,8 @@ import CartScreen from '../screens/CartScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 import PaymentScreen from '../screens/PaymentScreen';
 import StatisticsScreen from '../screens/StatisticsScreen';
+import AddInterventionScreen from '../screens/AddInterventionScreen';
+
 
 
 
@@ -91,7 +93,8 @@ export default function AppNavigator() {
               component={ProfileScreen}
               options={{ title: 'Profil' }}
             />
-            
+            <Stack.Screen name="AddIntervention"   component={AddInterventionScreen} />
+
             <Stack.Screen 
               name="Chat" 
               component={ChatScreen}
