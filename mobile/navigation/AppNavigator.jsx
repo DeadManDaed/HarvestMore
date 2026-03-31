@@ -24,6 +24,7 @@ import CropDetailScreen from '../screens/CropDetailScreen';
 import CatalogueScreen from '../screens/CatalogueScreen';
 import CartScreen from '../screens/CartScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
+import PaymentScreen from '../screens/PaymentScreen';
 
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -117,6 +118,11 @@ export default function AppNavigator() {
               options={{ title: 'Panier' }}
             />
             <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: 'Détail du produit' }} />
+            <Stack.Screen 
+              name="Payment" 
+              component={PaymentScreen}
+              options={{ title: 'Paiement' }}
+            />
             {/* ───────────────────────────────────────────────────────────── */}
             {/* DIAGNOSTIC WORKFLOW */}
             {/* ───────────────────────────────────────────────────────────── */}
