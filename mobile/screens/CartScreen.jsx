@@ -24,30 +24,26 @@ const handleCheckout = async () => {
 
   setSubmitting(true);
   try {
-    // 1. Créer la commande parente
+    // 1. Insertion de la commande
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
         user_id: user.id,
         total: total,
-        status: 'pending', 
-        payment_status: 'pending', // Utilise ton ENUM PostgreSQL
-        payment_method: 'mobile_money',
-        delivery_option: 'pickup',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        status: 'pending',
+        payment_status: 'pending',
+        payment_method: 'mobile_money'
+        // Pas besoin de forcer created_at/updated_at, le SQL le fait
       })
       .select()
       .single();
 
     if (orderError) throw orderError;
-    if (!order) throw new Error("La commande n'a pas pu être créée.");
 
-    // 2. Préparer et insérer les items de commande
-    // On s'assure que les clés correspondent exactement aux colonnes SQL
-    const orderItems = cartItems.map(item => ({
+    // 2. Transfert des items du panier vers la commande
+    const itemsToInsert = cartItems.map(item => ({
       order_id: order.id,
-      product_id: item.product_id,
+      product_id: parseInt(item.product_id), // On s'assure que c'est bien un entier
       quantity: item.quantity,
       price: item.price,
       product_name: item.product_name,
@@ -56,24 +52,19 @@ const handleCheckout = async () => {
 
     const { error: itemsError } = await supabase
       .from('order_items')
-      .insert(orderItems);
+      .insert(itemsToInsert);
 
     if (itemsError) throw itemsError;
 
-    // 3. Navigation vers le paiement avec les infos de transaction
+    // 3. Navigation vers le paiement
     navigation.navigate('Payment', {
       orderId: order.id,
-      cartItems: cartItems,
-      totalAmount: total,
-      // Génération d'un code temporaire pour le suivi
-      transactionCode: `HM${Date.now()}${Math.floor(Math.random() * 1000)}`
+      totalAmount: total
     });
 
   } catch (error) {
-    console.error('Erreur checkout:', error);
-    Alert.alert('Erreur', `Impossible de finaliser la commande : ${error.message}`);
-  } finally {
-    setSubmitting(false);
+    console.error('Erreur finale:', error.message);
+    Alert.alert('Erreur', 'La synchronisation avec la base de données a échoué.');
   }
 };
 
