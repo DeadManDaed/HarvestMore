@@ -14,12 +14,12 @@ import {
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useCart } from '../contexts/CartContext';
 
 export default function PaymentScreen({ route, navigation }) {
-  const { cartItems, totalAmount, orderId } = route.params;
+  const { cartItems = [], totalAmount = 0, orderId } = route.params || {}; // Toujours sécuriser route.params
   const { user } = useAuth();
-  const [isPaid, setIsPaid] = useState(false);
-  const [isConfirming, setIsConfirming] = useState(false);
+  const { clearCart } = useCart(); // <--- RÉCUPÈRE clearCart DU CONTEXTE
 
   // Générer un code unique pour la transaction
   const generateTransactionCode = () => {
@@ -90,44 +90,38 @@ export default function PaymentScreen({ route, navigation }) {
   // Confirmer le paiement
   const handleConfirmPayment = async () => {
     if (!isPaid) {
-      // Première étape: montrer les options de paiement
       showPaymentOptions();
+      setIsPaid(true); // <--- AJOUTE CECI pour que le bouton change d'état après la première étape
       return;
     }
 
-    // Deuxième étape: confirmer le paiement
     try {
       setIsConfirming(true);
-      
-      // Mettre à jour le statut de la commande
+
+      // 1. Mettre à jour la commande
       const { error: updateError } = await supabase
-  .from('orders')
-  .update({
-    status: 'processing', // La commande passe en préparation
-    payment_status: 'processing', // <--- L'admin doit maintenant valider le reçu
-    transaction_code: transactionCode,
-    paid_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  })
-  .eq('id', orderId);
+        .from('orders')
+        .update({
+          status: 'processing',
+          payment_status: 'processing', // Assure-toi que 'processing' est bien dans ton enum USER-DEFINED
+          transaction_code: transactionCode,
+          paid_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
 
       if (updateError) throw updateError;
 
-      // Vider le panier après paiement
-      const { error: deleteError } = await supabase
-        .from('cart_items')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (deleteError) console.error('Erreur vidage panier:', deleteError);
+      // 2. Vider le panier via le contexte (Met à jour la DB ET l'UI)
+      await clearCart(); // <--- UTILISE LA FONCTION DU CONTEXTE ICI
 
       Alert.alert(
         '✅ Paiement confirmé',
-        'Votre commande a été enregistrée avec succès. Vous recevrez une confirmation par SMS.',
+        'Votre commande a été enregistrée avec succès. Vous recevrez une confirmation.',
         [
           {
             text: 'Voir mes commandes',
-            onPress: () => navigation.navigate('Orders')
+            onPress: () => navigation.navigate('Orders') // Assure-toi que cette route existe
           }
         ]
       );
