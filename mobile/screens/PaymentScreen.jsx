@@ -101,15 +101,15 @@ export default function PaymentScreen({ route, navigation }) {
       
       // Mettre à jour le statut de la commande
       const { error: updateError } = await supabase
-        .from('orders')
-        .update({
-          status: 'paid',
-          payment_status: 'completed',
-          transaction_code: transactionCode,
-          paid_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId);
+  .from('orders')
+  .update({
+    status: 'processing', // La commande passe en préparation
+    payment_status: 'processing', // <--- L'admin doit maintenant valider le reçu
+    transaction_code: transactionCode,
+    paid_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  })
+  .eq('id', orderId);
 
       if (updateError) throw updateError;
 
