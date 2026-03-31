@@ -34,7 +34,7 @@ export default function CatalogueScreen({ navigation }) {
     dosage: '',
     usage_instructions: '',
     storage_conditions: '',
-    images: '',
+    images: [],
     category: '',
     stock: '',
     slug: ''
@@ -83,7 +83,7 @@ export default function CatalogueScreen({ navigation }) {
       dosage: '',
       usage_instructions: '',
       storage_conditions: '',
-      images: '',
+      images: [],
       category: '',
       stock: '',
       slug: ''
@@ -99,25 +99,33 @@ export default function CatalogueScreen({ navigation }) {
   };
 
   const handleSaveProduct = async () => {
-    // Validation
-    if (!formData.name || !formData.price || !formData.category) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires (nom, prix, catégorie)');
-      return;
-    }
+  if (!formData.name || !formData.price || !formData.category) {
+    Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires (nom, prix, catégorie)');
+    return;
+  }
 
-    try {
-      setLoading(true);
-      
-      // Générer le slug si non fourni
-      const slug = formData.slug || generateSlug(formData.name);
-      
-      const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        stock: formData.stock ? parseInt(formData.stock) : 0,
-        slug: slug,
-        updated_at: new Date().toISOString()
-      };
+  try {
+    setLoading(true);
+    const slug = formData.slug || generateSlug(formData.name);
+
+    const productData = {
+      name: formData.name,
+      short_description: formData.short_description,
+      long_description: formData.long_description,
+      price: parseFloat(formData.price),
+      dosage: formData.dosage,
+      usage_instructions: formData.usage_instructions,
+      storage_conditions: formData.storage_conditions,
+      images: formData.images,  // Maintenant c'est un tableau
+      category: formData.category,
+      stock: formData.stock ? parseInt(formData.stock) : 0,
+      slug: slug,
+      updated_at: new Date().toISOString()
+    };
+
+    // ... reste du code inchangé
+  }
+};
 
       let result;
       
@@ -195,7 +203,7 @@ export default function CatalogueScreen({ navigation }) {
       dosage: product.dosage || '',
       usage_instructions: product.usage_instructions || '',
       storage_conditions: product.storage_conditions || '',
-      images: product.images || '',
+      images: product.images || [],
       category: product.category || '',
       stock: product.stock?.toString() || '',
       slug: product.slug || ''
@@ -208,9 +216,10 @@ export default function CatalogueScreen({ navigation }) {
       style={styles.productCard}
       onPress={() => navigation.navigate('ProductDetail', { product: item })}
     >
-      {item.images && (
-        <Image source={{ uri: item.images }} style={styles.productImage} />
-      )}
+    {item.images && item.images.length > 0 && (  // Vérification améliorée
+      <Image source={{ uri: item.images[0] }} style={styles.productImage} />  // Prend la première image
+    )}
+
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.name}</Text>
         <Text style={styles.productCategory}>{item.category}</Text>
@@ -381,12 +390,12 @@ export default function CatalogueScreen({ navigation }) {
                 onChangeText={(text) => handleInputChange('storage_conditions', text)}
               />
 
-              <TextInput
-                style={styles.input}
-                placeholder="URL de l'image"
-                value={formData.images}
-                onChangeText={(text) => handleInputChange('images', text)}
-              />
+ <TextInput
+  style={styles.input}
+  placeholder="URLs des images (séparées par des virgules)"
+  value={formData.images.join(', ')}
+  onChangeText={(text) => handleInputChange('images', text.split(',').map(url => url.trim()))}
+/>
 
               <TextInput
                 style={styles.input}
