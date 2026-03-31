@@ -1,4 +1,5 @@
 // mobile/screens/CartScreen.jsx
+
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useCart } from '../contexts/CartContext';
@@ -10,8 +11,6 @@ export default function CartScreen({ navigation }) {
   const { cartItems, loading, updateQuantity, removeItem, clearCart, getTotal, fetchCart } = useCart();
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
-  const [orderCreated, setOrderCreated] = useState(false);
-  const [ussdCode, setUssdCode] = useState('');
 
   const total = getTotal();
 
@@ -30,63 +29,54 @@ export default function CartScreen({ navigation }) {
           user_id: user.id,
           total: total,
           status: 'pending_payment',
+          payment_status: 'pending',
           payment_method: 'mobile_money',
-          delivery_option: 'pickup'
+          delivery_option: 'pickup',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .select()
         .single();
 
       if (orderError) throw orderError;
 
-      // 2. Créer la transaction de paiement
-      const ussd = `*126*16*080413*${Math.round(total)}#`;
-      const { error: txError } = await supabase
-        .from('payment_transactions')
-        .insert({
-          order_id: order.id,
-          provider: 'mtn',
-          amount: total,
-          ussd_code: ussd,
-          status: 'pending'
-        });
+      // 2. Créer les items de commande
+      const orderItems = cartItems.map(item => ({
+        order_id: order.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.price,
+        product_name: item.product_name,
+        product_image: item.product_image
+      }));
 
-      if (txError) throw txError;
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
 
-      setUssdCode(ussd);
-      setOrderCreated(true);
-      Alert.alert(
-        'Commande enregistrée',
-        `Votre commande #${order.id.slice(0,8)} est en attente de paiement.\nComposez : ${ussd}\nCliquez sur "J’ai payé" après avoir effectué le paiement.`
-      );
+      if (itemsError) throw itemsError;
+
+      // 3. Naviguer vers l'écran de paiement
+      navigation.navigate('Payment', {
+        orderId: order.id,
+        cartItems: cartItems,
+        totalAmount: total,
+        transactionCode: `HM${Date.now()}${Math.floor(Math.random() * 1000)}`
+      });
+
     } catch (error) {
-      console.error(error);
+      console.error('Erreur création commande:', error);
       Alert.alert('Erreur', 'Impossible de finaliser la commande.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleConfirmPayment = async () => {
-    Alert.alert(
-      'Confirmation',
-      'Avez-vous bien effectué le paiement ?',
-      [
-        { text: 'Non', style: 'cancel' },
-        {
-          text: 'Oui',
-          onPress: async () => {
-            Alert.alert('Merci !', 'Votre paiement sera vérifié. Vous serez notifié dès confirmation.');
-          }
-        }
-      ]
-    );
-  };
-
   const renderCartItem = ({ item }) => (
     <View style={styles.cartItem}>
       <View style={styles.itemInfo}>
-        <Text style={styles.itemName}>{item.product.name}</Text>
-        <Text style={styles.itemPrice}>{item.product.price} FCFA</Text>
+        <Text style={styles.itemName}>{item.product_name || item.product?.name}</Text>
+        <Text style={styles.itemPrice}>{item.price || item.product?.price} FCFA</Text>
       </View>
       <View style={styles.itemActions}>
         <TouchableOpacity
@@ -120,7 +110,7 @@ export default function CartScreen({ navigation }) {
     );
   }
 
-  if (cartItems.length === 0 && !orderCreated) {
+  if (cartItems.length === 0) {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.emptyText}>Votre panier est vide.</Text>
@@ -146,31 +136,21 @@ export default function CartScreen({ navigation }) {
 
         <View style={styles.totalContainer}>
           <Text style={styles.totalLabel}>Total :</Text>
-          <Text style={styles.totalAmount}>{total} FCFA</Text>
+          <Text style={styles.totalAmount}>{total.toLocaleString()} FCFA</Text>
         </View>
 
-        {orderCreated ? (
-          <View style={styles.paymentSection}>
-            <Text style={styles.paymentTitle}>Paiement par Mobile Money</Text>
-            <Text style={styles.ussdText}>Composez : {ussdCode}</Text>
-            <TouchableOpacity style={styles.paidButton} onPress={handleConfirmPayment}>
-              <Text style={styles.paidButtonText}>J’ai payé</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.checkoutButton}
-            onPress={handleCheckout}
-            disabled={submitting}
-          >
-            <Text style={styles.checkoutButtonText}>
-              {submitting ? 'Commande en cours...' : 'Commander'}
-            </Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.checkoutButton}
+          onPress={handleCheckout}
+          disabled={submitting}
+        >
+          <Text style={styles.checkoutButtonText}>
+            {submitting ? 'Commande en cours...' : '📦 Commander'}
+          </Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.clearButton} onPress={clearCart}>
-          <Text style={styles.clearButtonText}>Vider le panier</Text>
+          <Text style={styles.clearButtonText}>🗑️ Vider le panier</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -216,7 +196,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   totalLabel: { fontSize: 18, fontWeight: 'bold' },
-  totalAmount: { fontSize: 20, fontWeight: 'bold', color: '#2e7d32' },
+  totalAmount: { fontSize: 20, fontWeight: 'bold', color: '#f57c00' },
   checkoutButton: {
     backgroundColor: '#2e7d32',
     padding: 15,
@@ -241,22 +221,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   shopButtonText: { color: '#fff', fontWeight: 'bold' },
-  paymentSection: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 15,
-    marginVertical: 10,
-    alignItems: 'center',
-  },
-  paymentTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-  ussdText: { fontSize: 16, fontFamily: 'monospace', marginVertical: 10, color: '#d32f2f' },
-  paidButton: {
-    backgroundColor: '#ff9800',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 10,
-  },
-  paidButtonText: { color: '#fff', fontWeight: 'bold' },
 });
