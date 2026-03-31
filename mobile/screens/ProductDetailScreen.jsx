@@ -1,4 +1,5 @@
 // mobile/screens/ProductDetailScreen.jsx
+
 import React, { useState } from 'react';
 import {
   View,
@@ -28,7 +29,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   const [addingToCart, setAddingToCart] = useState(false);
   const [showWebView, setShowWebView] = useState(false);
 
-  // Ajouter au panier
+  // Ajouter au panier (sans vérification de stock)
   const handleAddToCart = async () => {
     // Vérifier si l'utilisateur est connecté
     if (!user) {
@@ -43,22 +44,16 @@ export default function ProductDetailScreen({ route, navigation }) {
       return;
     }
 
-    // Vérifier le stock
-    if (product.stock <= 0) {
-      Alert.alert('Stock épuisé', 'Ce produit n\'est plus disponible');
-      return;
-    }
-
     try {
       setAddingToCart(true);
       
       // 1. Vérifier si le produit est déjà dans le panier
       const { data: existingItem, error: checkError } = await supabase
         .from('cart_items')
-        .select('*')
+        .select('id, quantity')
         .eq('user_id', user.id)
         .eq('product_id', product.id)
-        .single();
+        .maybeSingle();
 
       if (checkError && checkError.code !== 'PGRST116') {
         throw checkError;
@@ -69,10 +64,7 @@ export default function ProductDetailScreen({ route, navigation }) {
         // Mettre à jour la quantité
         const { error: updateError } = await supabase
           .from('cart_items')
-          .update({ 
-            quantity: existingItem.quantity + 1,
-            updated_at: new Date().toISOString()
-          })
+          .update({ quantity: existingItem.quantity + 1 })
           .eq('id', existingItem.id);
 
         if (updateError) throw updateError;
@@ -80,27 +72,19 @@ export default function ProductDetailScreen({ route, navigation }) {
         // Ajouter nouveau produit
         const { error: insertError } = await supabase
           .from('cart_items')
-          .insert([{
+          .insert({
             user_id: user.id,
             product_id: product.id,
             quantity: 1,
             price: product.price,
             product_name: product.name,
-            product_image: product.images && product.images[0] ? product.images[0] : null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }]);
+            product_image: product.images && product.images[0] ? product.images[0] : null
+          });
 
         if (insertError) throw insertError;
       }
 
-      // 3. Mettre à jour le stock localement (optionnel)
-      setProduct(prev => ({
-        ...prev,
-        stock: prev.stock - 1
-      }));
-
-      // 4. Notification de succès
+      // 3. Notification de succès
       Alert.alert(
         '✅ Ajouté au panier',
         `${product.name} a été ajouté à votre panier`,
@@ -114,7 +98,7 @@ export default function ProductDetailScreen({ route, navigation }) {
       );
     } catch (error) {
       console.error('Erreur ajout au panier:', error);
-      Alert.alert('Erreur', 'Impossible d\'ajouter le produit au panier');
+      Alert.alert('Erreur', `Impossible d'ajouter au panier: ${error.message}`);
     } finally {
       setAddingToCart(false);
     }
@@ -128,11 +112,8 @@ export default function ProductDetailScreen({ route, navigation }) {
 
   // Modifier le produit (admin)
   const handleEditProduct = () => {
-    // Naviguer vers l'écran d'édition ou ouvrir le modal
-    navigation.navigate('Catalogue', { 
-      screen: 'EditProduct',
-      params: { product: product, editMode: true }
-    });
+    // À implémenter selon votre logique d'édition
+    Alert.alert('Info', 'Fonctionnalité d\'édition à venir');
   };
 
   // Supprimer le produit (admin)
@@ -149,7 +130,7 @@ export default function ProductDetailScreen({ route, navigation }) {
             try {
               setLoading(true);
               
-              // 1. Supprimer d'abord les références dans le panier
+              // 1. Supprimer les références dans le panier
               const { error: cartError } = await supabase
                 .from('cart_items')
                 .delete()
@@ -215,19 +196,15 @@ export default function ProductDetailScreen({ route, navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Stock */}
-          {product.stock !== undefined && (
-            <View style={styles.stockContainer}>
-              <Text style={[
-                styles.stockText,
-                product.stock > 0 ? styles.inStock : styles.outOfStock
-              ]}>
-                {product.stock > 0 
-                  ? `✅ En stock (${product.stock} unités)` 
-                  : '❌ Rupture de stock'}
-              </Text>
-            </View>
-          )}
+          {/* Message "disponible en boutique" au lieu du stock */}
+          <View style={styles.availabilityContainer}>
+            <Text style={styles.availabilityText}>
+              ✅ Disponible dans nos boutiques partenaires
+            </Text>
+            <Text style={styles.availabilitySubtext}>
+              Un de nos commerçants près de chez vous a ce produit
+            </Text>
+          </View>
 
           {/* Dosage */}
           {product.dosage && (
@@ -271,22 +248,16 @@ export default function ProductDetailScreen({ route, navigation }) {
 
           {/* Boutons d'action */}
           <View style={styles.buttonContainer}>
-            {/* Bouton Ajouter au panier */}
+            {/* Bouton Ajouter au panier - toujours actif */}
             <TouchableOpacity
-              style={[
-                styles.button, 
-                styles.addToCartButton,
-                (product.stock <= 0 || addingToCart) && styles.disabledButton
-              ]}
+              style={[styles.button, styles.addToCartButton]}
               onPress={handleAddToCart}
-              disabled={addingToCart || product.stock <= 0}
+              disabled={addingToCart}
             >
               {addingToCart ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>
-                  {product.stock > 0 ? '🛒 Ajouter au panier' : '📦 Rupture de stock'}
-                </Text>
+                <Text style={styles.buttonText}>🛒 Ajouter au panier</Text>
               )}
             </TouchableOpacity>
 
@@ -408,22 +379,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  stockContainer: {
+  availabilityContainer: {
     marginBottom: 20,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#e0e0e0',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4caf50',
   },
-  stockText: {
+  availabilityText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: '#2e7d32',
+    marginBottom: 4,
   },
-  inStock: {
-    color: '#4caf50',
-  },
-  outOfStock: {
-    color: '#f44336',
+  availabilitySubtext: {
+    fontSize: 12,
+    color: '#666',
   },
   section: {
     marginBottom: 20,
@@ -464,10 +437,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f44336',
     flex: 1,
     marginLeft: 5,
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
-    opacity: 0.7,
   },
   adminButtons: {
     flexDirection: 'row',
