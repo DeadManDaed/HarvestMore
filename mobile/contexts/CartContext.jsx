@@ -32,27 +32,33 @@ export const CartProvider = ({ children }) => {
     setLoading(false);
   };
 
-  const addToCart = async (productId, quantity = 1) => {
-    if (!user) return;
+  // SRC/contexts/CartContext.jsx
 
-    // Vérifier si le produit est déjà dans le panier
-    const existingItem = cartItems.find(item => item.product_id === productId);
-    if (existingItem) {
-      const newQuantity = existingItem.quantity + quantity;
-      const { error } = await supabase
-        .from('cart_items')
-        .update({ quantity: newQuantity })
-        .eq('id', existingItem.id);
-      if (error) console.error(error);
-      else fetchCart();
-    } else {
-      const { error } = await supabase
-        .from('cart_items')
-        .insert({ user_id: user.id, product_id: productId, quantity });
-      if (error) console.error(error);
-      else fetchCart();
-    }
-  };
+const addToCart = async (productId, quantity = 1) => {
+  if (!user) return;
+
+  // 1. SÉCURITÉ : On force la conversion de l'ID en nombre entier
+  const numericProductId = parseInt(productId, 10);
+
+  // 2. On utilise numericProductId pour chercher (le triple égal fonctionnera à 100%)
+  const existingItem = cartItems.find(item => item.product_id === numericProductId);
+  
+  if (existingItem) {
+    const newQuantity = existingItem.quantity + quantity;
+    const { error } = await supabase
+      .from('cart_items')
+      .update({ quantity: newQuantity })
+      .eq('id', existingItem.id);
+    if (error) console.error(error);
+    else fetchCart();
+  } else {
+    // 3. On utilise numericProductId pour l'insertion en base de données
+    const { error } = await supabase
+      .from('cart_items')
+      .insert({ 
+        user_id: user.id, 
+        product_id: numericProductId, // <-- On envoie bien un 'integer' à Sup
+
 
   const updateQuantity = async (itemId, newQuantity) => {
     if (newQuantity <= 0) {
