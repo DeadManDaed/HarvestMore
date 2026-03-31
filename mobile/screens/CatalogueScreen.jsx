@@ -15,7 +15,7 @@ import {
   RefreshControl
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../services/supabase';
+import { supabase } from '../lib/supabase';
 
 export default function CatalogueScreen({ navigation }) {
   const { user } = useAuth();
