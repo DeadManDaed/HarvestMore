@@ -123,10 +123,6 @@ export default function CatalogueScreen({ navigation }) {
       updated_at: new Date().toISOString()
     };
 
-    // ... reste du code inchangé
-  }
-};
-
       let result;
       
       if (editingProduct) {
