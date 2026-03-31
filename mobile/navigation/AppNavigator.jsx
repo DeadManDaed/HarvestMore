@@ -25,6 +25,8 @@ import CatalogueScreen from '../screens/CatalogueScreen';
 import CartScreen from '../screens/CartScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 import PaymentScreen from '../screens/PaymentScreen';
+import StatisticsScreen from '../screens/StatisticsScreen';
+
 
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -112,6 +114,8 @@ export default function AppNavigator() {
               component={CatalogueScreen}
               options={{ title: 'Catalogue' }}
             />
+            
+            <Stack.Screen name="Statistics"             component={StatisticsScreen} />
             <Stack.Screen 
               name="Cart" 
               component={CartScreen}
