@@ -64,6 +64,16 @@ export default function CropDetailScreen({ route, navigation }) {
             <Text style={styles.statValue}>{plantation.estimated_yield} T</Text>
           </View>
         </View>
+<TouchableOpacity
+  style={styles.addInterventionButton}
+  onPress={() => navigation.navigate('AddIntervention', {
+    plantationId: plantation.id,
+    plantationName: plantation.crops?.name
+  })}
+>
+  <MaterialIcons name="add-circle" size={24} color="#fff" />
+  <Text style={styles.addInterventionText}>Ajouter une intervention</Text>
+</TouchableOpacity>
 
         <Text style={styles.sectionTitle}>Historique des Techniques</Text>
         {interventions.length > 0 ? (
@@ -111,4 +121,15 @@ const styles = StyleSheet.create({
   interType: { fontSize: 14, fontWeight: 'bold', color: '#2e7d32' },
   interDetail: { fontSize: 13, color: '#555', marginTop: 2 },
   emptyText: { fontStyle: 'italic', color: '#999', textAlign: 'center' }
+addInterventionButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: '#2e7d32',
+  padding: 12,
+  borderRadius: 10,
+  marginBottom: 20,
+  gap: 8
+},
+addInterventionText: { color: '#fff', fontWeight: 'bold', fontSize: 14 }
 });
