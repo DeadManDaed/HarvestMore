@@ -23,7 +23,7 @@ import MyCropsScreen from '../screens/MyCropsScreen';
 import CropDetailScreen from '../screens/CropDetailScreen';
 import CatalogueScreen from '../screens/CatalogueScreen';
 import CartScreen from '../screens/CartScreen';
-import ProductDerailScreen from '../screens/ProductDerailScreen';
+import ProductDetailScreen from '../screens/ProductDetailScreen';
 
 
 // ═══════════════════════════════════════════════════════════════════════════
