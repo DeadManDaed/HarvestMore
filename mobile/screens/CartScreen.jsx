@@ -24,19 +24,19 @@ export default function CartScreen({ navigation }) {
     try {
       // 1. Créer la commande
       const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          total: total,
-          status: 'pending_payment',
-          payment_status: 'pending',
-          payment_method: 'mobile_money',
-          delivery_option: 'pickup',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+  .from('orders')
+  .insert({
+    user_id: user.id,
+    total: total,
+    status: 'pending', // Statut global de la commande
+    payment_status: 'pending', // <--- État initial de l'ENUM
+    payment_method: 'mobile_money',
+    delivery_option: 'pickup',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  })
+  .select()
+  .single();
 
       if (orderError) throw orderError;
 
