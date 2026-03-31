@@ -14,63 +14,68 @@ export default function CartScreen({ navigation }) {
 
   const total = getTotal();
 
-  const handleCheckout = async () => {
-    if (cartItems.length === 0) {
-      Alert.alert('Panier vide', 'Ajoutez des produits avant de commander.');
-      return;
-    }
+  // mobile/screens/CartScreen.jsx
 
-    setSubmitting(true);
-    try {
-      // 1. Créer la commande
-      const { data: order, error: orderError } = await supabase
-  .from('orders')
-  .insert({
-    user_id: user.id,
-    total: total,
-    status: 'pending', // Statut global de la commande
-    payment_status: 'pending', // <--- État initial de l'ENUM
-    payment_method: 'mobile_money',
-    delivery_option: 'pickup',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  })
-  .select()
-  .single();
+const handleCheckout = async () => {
+  if (cartItems.length === 0) {
+    Alert.alert('Panier vide', 'Ajoutez des produits avant de commander.');
+    return;
+  }
 
-      if (orderError) throw orderError;
+  setSubmitting(true);
+  try {
+    // 1. Créer la commande parente
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        user_id: user.id,
+        total: total,
+        status: 'pending', 
+        payment_status: 'pending', // Utilise ton ENUM PostgreSQL
+        payment_method: 'mobile_money',
+        delivery_option: 'pickup',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-      // 2. Créer les items de commande
-      const orderItems = cartItems.map(item => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.price,
-        product_name: item.product_name,
-        product_image: item.product_image
-      }));
+    if (orderError) throw orderError;
+    if (!order) throw new Error("La commande n'a pas pu être créée.");
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
+    // 2. Préparer et insérer les items de commande
+    // On s'assure que les clés correspondent exactement aux colonnes SQL
+    const orderItems = cartItems.map(item => ({
+      order_id: order.id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price: item.price,
+      product_name: item.product_name,
+      product_image: item.product_image
+    }));
 
-      if (itemsError) throw itemsError;
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItems);
 
-      // 3. Naviguer vers l'écran de paiement
-      navigation.navigate('Payment', {
-        orderId: order.id,
-        cartItems: cartItems,
-        totalAmount: total,
-        transactionCode: `HM${Date.now()}${Math.floor(Math.random() * 1000)}`
-      });
+    if (itemsError) throw itemsError;
 
-    } catch (error) {
-      console.error('Erreur création commande:', error);
-      Alert.alert('Erreur', 'Impossible de finaliser la commande.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    // 3. Navigation vers le paiement avec les infos de transaction
+    navigation.navigate('Payment', {
+      orderId: order.id,
+      cartItems: cartItems,
+      totalAmount: total,
+      // Génération d'un code temporaire pour le suivi
+      transactionCode: `HM${Date.now()}${Math.floor(Math.random() * 1000)}`
+    });
+
+  } catch (error) {
+    console.error('Erreur checkout:', error);
+    Alert.alert('Erreur', `Impossible de finaliser la commande : ${error.message}`);
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const renderCartItem = ({ item }) => (
     <View style={styles.cartItem}>
