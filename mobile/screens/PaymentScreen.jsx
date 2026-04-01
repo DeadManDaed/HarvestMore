@@ -34,12 +34,12 @@ export default function PaymentScreen({ route, navigation }) {
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     const userCode = user?.id?.slice(-4) || '0000';
     // Format: NFBO-745623-8912-3456 (préfixe + timestamp + random + userCode)
-    return `NFBO-${timestamp}-${random}-${userCode}`;
+    return `CAFCOOP-${timestamp}-${random}-${userCode}`;
   }, [user?.id]); // Recalculé uniquement si user.id change
 
   // Numéro USSD pour le paiement (à adapter selon opérateur)
   // MTN Cameroon: *126#, Orange Cameroon: *144#
-  const ussdCode = `*126*${transactionCode.replace(/NFBO-/g, '')}#`;
+  const ussdCode = `*126*${transactionCode.replace(/CAFCOOP-/g, '')}#`;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // HANDLERS
