@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   interDate: { fontSize: 11, color: '#9e9e9e' },
   interType: { fontSize: 14, fontWeight: 'bold', color: '#2e7d32' },
   interDetail: { fontSize: 13, color: '#555', marginTop: 2 },
-  emptyText: { fontStyle: 'italic', color: '#999', textAlign: 'center' }
+  emptyText: { fontStyle: 'italic', color: '#999', textAlign: 'center' },
 addInterventionButton: {
   flexDirection: 'row',
   alignItems: 'center',
