@@ -199,13 +199,10 @@ export default function HomeScreen({ navigation }) {
     </View>
   );
 
-// récupérer access_token
-const { data, error } = await supabase.auth.getSession()
-if (error) throw error
+  return (
+    // récupérer access_token
 console.log("ACCESS_TOKEN=", data.session?.access_token);
 
-
-  return (
     <FlatList
       ListHeaderComponent={
         <>
