@@ -201,7 +201,7 @@ export default function HomeScreen({ navigation }) {
 
   return (
     // récupérer access_token
-console.log("ACCESS_TOKEN=", data.session?.access_token);
+console.log("ACCESS_TOKEN=", data.session?.access_token)
 
     <FlatList
       ListHeaderComponent={
