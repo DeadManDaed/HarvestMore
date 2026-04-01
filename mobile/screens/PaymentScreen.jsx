@@ -145,6 +145,10 @@ export default function PaymentScreen({ route, navigation }) {
 
   // Appeler l'Edge Function pour initier le paiement
   const initiatePayment = async () => {
+
+// verification de la session active
+  console.log("Session token:", (await supabase.auth.getSession()).data.session?.access_token);
+
     setIsConfirming(true);
     const formattedPhone = formatPhoneNumber(phoneNumber);
     const amount = Math.round(totalAmount);
