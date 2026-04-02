@@ -33,7 +33,8 @@ export default function TabNavigator() {
       { name: 'Panier', component: CartScreen, icon: 'shopping-cart' },
       { name: 'Messagerie', component: ConversationsScreen, icon: 'chat' },
       { name: 'Contacts', component: ContactsScreen, icon: 'contacts' },
-      { name: 'Profil', component: ProfileScreen, icon: 'person' }
+      { name: 'Profil', component: ProfileScreen, icon: 'person' },
+  { name: 'Agenda', component: AgendaScreen, icon: 'event' }
     ];
 
     const roleSpecificTabs = {
