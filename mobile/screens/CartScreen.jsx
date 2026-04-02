@@ -11,6 +11,12 @@ export default function CartScreen({ navigation }) {
   const { cartItems, loading, updateQuantity, removeItem, clearCart, getTotal, fetchCart } = useCart();
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  // Recharger le panier à chaque fois que l'écran est affiché
+  useFocusEffect(
+    useCallback(() => {
+      fetchCart();
+    }, [fetchCart])
+  );
 
   const total = getTotal();
 
