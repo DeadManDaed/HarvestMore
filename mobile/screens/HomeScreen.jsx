@@ -137,7 +137,7 @@ const tips = [
   { icon: '☀️', category: 'Arachide', text: "Récoltez quand feuilles jaunissent : goûtez 1 gousse pour vérifier maturité", color: '#F57C00' },
 ];
 export default function HomeScreen({ navigation }) {
-  const { user, signOut } = useAuth();
+  const { user, session, signOut } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
 useEffect(() => {
   if (session?.access_token) {
