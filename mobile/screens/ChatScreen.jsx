@@ -1,41 +1,90 @@
-//mobile/screens/ChatScreen.jsx
-
+// mobile/screens/ChatScreen.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { useChat } from '../contexts/ChatContext';
+import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 export default function ChatScreen({ route, navigation }) {
-  const { conversationId } = route.params;
-  const { currentConversation, messages, sendMessage, leaveConversation, getOrCreateConversation } = useChat();
+  const { conversationId, groupId, groupName } = route.params;
   const { user } = useAuth();
+  const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
+  const [loading, setLoading] = useState(true);
   const flatListRef = useRef();
 
-  useEffect(() => {
-    // Charger la conversation
-    if (conversationId) {
-      // La conversation est déjà chargée via le contexte
-      // On pourrait appeler loadMessages si nécessaire
-    }
-    return () => {
-      leaveConversation();
-    };
-  }, []);
+  const isGroup = !!groupId;
+  const chatTitle = isGroup ? groupName : 'Chargement...';
 
-  const handleSend = () => {
-    if (inputText.trim()) {
-      sendMessage(inputText);
+  // Charger les messages existants
+  const loadMessages = async () => {
+    let query = supabase
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (isGroup) {
+      query = query.eq('group_id', groupId);
+    } else {
+      query = query.eq('conversation_id', conversationId);
+    }
+    const { data, error } = await query;
+    if (error) {
+      console.error('Erreur chargement messages:', error);
+    } else {
+      setMessages(data || []);
+    }
+    setLoading(false);
+  };
+
+  // Souscription en temps réel
+  useEffect(() => {
+    loadMessages();
+
+    const channel = supabase
+      .channel('chat-channel')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: isGroup ? `group_id=eq.${groupId}` : `conversation_id=eq.${conversationId}`,
+      }, (payload) => {
+        setMessages(prev => [...prev, payload.new]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, groupId]);
+
+  // Envoyer un message
+  const sendMessage = async () => {
+    if (!inputText.trim()) return;
+    const newMessage = {
+      content: inputText.trim(),
+      sender_id: user.id,
+      created_at: new Date().toISOString(),
+    };
+    if (isGroup) {
+      newMessage.group_id = groupId;
+    } else {
+      newMessage.conversation_id = conversationId;
+    }
+    const { error } = await supabase.from('messages').insert(newMessage);
+    if (error) {
+      Alert.alert('Erreur', 'Impossible d\'envoyer le message');
+      console.error(error);
+    } else {
       setInputText('');
     }
   };
 
+  // Rendu d'un message
   const renderMessage = ({ item }) => {
     const isMine = item.sender_id === user.id;
     return (
       <View style={[styles.messageRow, isMine ? styles.myMessageRow : styles.otherMessageRow]}>
         <View style={[styles.messageBubble, isMine ? styles.myBubble : styles.otherBubble]}>
-          <Text style={styles.messageText}>{item.content}</Text>
+          <Text style={[styles.messageText, isMine && styles.myBubbleText]}>{item.content}</Text>
           <Text style={styles.messageTime}>
             {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </Text>
@@ -44,13 +93,13 @@ export default function ChatScreen({ route, navigation }) {
     );
   };
 
-  const getOtherName = () => {
-    if (!currentConversation) return '...';
-    if (currentConversation.user_id === user.id) {
-      return currentConversation.technician?.full_name || 'Technicien';
-    }
-    return currentConversation.user?.full_name || 'Agriculteur';
-  };
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text>Chargement...</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -62,7 +111,7 @@ export default function ChatScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{getOtherName()}</Text>
+        <Text style={styles.headerTitle}>{chatTitle}</Text>
       </View>
 
       <FlatList
@@ -82,7 +131,7 @@ export default function ChatScreen({ route, navigation }) {
           placeholder="Écrivez votre message..."
           multiline
         />
-        <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
           <Text style={styles.sendButtonText}>Envoyer</Text>
         </TouchableOpacity>
       </View>
@@ -92,6 +141,7 @@ export default function ChatScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -108,11 +158,7 @@ const styles = StyleSheet.create({
   messageBubble: { maxWidth: '80%', padding: 10, borderRadius: 15 },
   myBubble: { backgroundColor: '#2e7d32', borderBottomRightRadius: 4 },
   otherBubble: { backgroundColor: '#e0e0e0', borderBottomLeftRadius: 4 },
-  messageText: { fontSize: 14, color: '#fff' },
-  myBubble: { backgroundColor: '#2e7d32' },
-  otherBubble: { backgroundColor: '#fff' },
   messageText: { fontSize: 14 },
-  myBubble: { backgroundColor: '#2e7d32' },
   myBubbleText: { color: '#fff' },
   messageTime: { fontSize: 10, color: '#aaa', marginTop: 4, textAlign: 'right' },
   inputContainer: { flexDirection: 'row', padding: 10, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#eee' },
