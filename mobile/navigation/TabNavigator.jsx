@@ -12,15 +12,13 @@ import ProfileScreen from '../screens/ProfileScreen';
 import ConversationsScreen from '../screens/ConversationsScreen';
 import ContactsScreen from '../screens/ContactsScreen';
 
-// Écrans spécifiques aux rôles
-{/*
+// Écrans spécifiques
 import TechnicianDashboard from '../screens/technician/TechnicianDashboard';
-*/}
 import AdminDashboard from '../screens/admin/AdminDashboard';
-{/*
 import StoreManagerDashboard from '../screens/store/StoreManagerDashboard';
 import SalesDashboard from '../screens/sales/SalesDashboard';
-*/}
+import DriverDashboard from '../screens/driver/DriverDashboard';
+
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigator() {
@@ -40,7 +38,7 @@ export default function TabNavigator() {
 
     const roleSpecificTabs = {
       farmer: [],
-    /*  technician: [
+      technician: [
         { name: 'Diagnostics', component: TechnicianDashboard, icon: 'medical-services' }
       ],
       sales: [
@@ -48,7 +46,10 @@ export default function TabNavigator() {
       ],
       store_manager: [
         { name: 'Commandes', component: StoreManagerDashboard, icon: 'inventory' }
-      ],    */
+      ],
+      driver: [
+        { name: 'Livraisons', component: DriverDashboard, icon: 'local-shipping' }
+      ],
       admin: [
         { name: 'Admin', component: AdminDashboard, icon: 'admin-panel-settings' }
       ]
