@@ -146,7 +146,7 @@ Deno.serve(async (req: Request) => {
     const referenceId = crypto.randomUUID();
     const paymentPayload = {
       amount: parsedAmount.toString(),
-      currency: "XAF",
+      currency: "EUR",
       externalId: orderId,
       payer: { partyIdType: "MSISDN", partyId: cleanPhone },
       payerMessage: `Commande CAFCOOP ${orderId.slice(0, 8)}`,
