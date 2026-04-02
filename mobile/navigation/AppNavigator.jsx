@@ -27,6 +27,10 @@ import ProductDetailScreen from '../screens/ProductDetailScreen';
 import PaymentScreen from '../screens/PaymentScreen';
 import StatisticsScreen from '../screens/StatisticsScreen';
 import AddInterventionScreen from '../screens/AddInterventionScreen';
+import AgendaScreen from '../screens/AgendaScreen';
+import AddEventScreen from '../screens/AddEventScreen';
+import EventDetailScreen from '../screens/EventDetailScreen';
+
 
 
 
@@ -130,6 +134,9 @@ export default function AppNavigator() {
               component={PaymentScreen}
               options={{ title: 'Paiement' }}
             />
+<Stack.Screen name="Agenda" component={AgendaScreen} />
+<Stack.Screen name="AddEvent" component={AddEventScreen} />
+<Stack.Screen name="EventDetail" component={EventDetailScreen} />
             {/* ───────────────────────────────────────────────────────────── */}
             {/* DIAGNOSTIC WORKFLOW */}
             {/* ───────────────────────────────────────────────────────────── */}
