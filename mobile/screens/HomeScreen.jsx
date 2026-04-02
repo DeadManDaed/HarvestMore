@@ -139,6 +139,11 @@ const tips = [
 export default function HomeScreen({ navigation }) {
   const { user, signOut } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
+useEffect(() => {
+  if (session?.access_token) {
+    console.log("✅ ACCESS_TOKEN =", session.access_token);
+  }
+}, [session]);
   const flatListRef = useRef(null);
   const timerRef = useRef(null);
 
@@ -200,9 +205,6 @@ export default function HomeScreen({ navigation }) {
   );
 
   return (
-    // récupérer access_token
-console.log("ACCESS_TOKEN=", data.session?.access_token)
-
     <FlatList
       ListHeaderComponent={
         <>
