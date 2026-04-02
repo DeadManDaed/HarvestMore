@@ -11,16 +11,15 @@ export default function CartScreen({ navigation }) {
   const { cartItems, loading, updateQuantity, removeItem, clearCart, getTotal, fetchCart } = useCart();
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
-  // Recharger le panier à chaque fois que l'écran est affiché
-  useFocusEffect(
-    useCallback(() => {
+  // Recharger le panier à chaque fois que l'écran est affiché (focus)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
       fetchCart();
-    }, [fetchCart])
-  );
+    });
+    return unsubscribe;
+  }, [navigation, fetchCart]);
 
   const total = getTotal();
-
-  // mobile/screens/CartScreen.jsx
 
 const handleCheckout = async () => {
   if (cartItems.length === 0) {
