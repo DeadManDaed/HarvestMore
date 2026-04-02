@@ -1,6 +1,6 @@
 // mobile/screens/CartScreen.jsx
 
-import React, { useState }, {useEffect} from 'react';
+import React, { useState, useEffect} from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
