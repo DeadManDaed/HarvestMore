@@ -1,0 +1,5 @@
+[functions.momo-payment]
+verify_jwt = false
+
+[functions.momo-payment-status]
+verify_jwt = false
