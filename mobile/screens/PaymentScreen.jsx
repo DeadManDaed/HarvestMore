@@ -145,56 +145,91 @@ export default function PaymentScreen({ route, navigation }) {
 
   // Appeler l'Edge Function pour initier le paiement
   const initiatePayment = async () => {
+  setIsConfirming(true);
+  const formattedPhone = formatPhoneNumber(phoneNumber);
+  const amount = Math.round(totalAmount);
 
-// verification de la session active
-  console.log("Session token:", (await supabase.auth.getSession()).data.session?.access_token);
-
-    setIsConfirming(true);
-    const formattedPhone = formatPhoneNumber(phoneNumber);
-    const amount = Math.round(totalAmount);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('momo-payment', {
-        body: {
-          amount,
-          phoneNumber: formattedPhone,
-          orderId: orderId
-        }
-      });
-
-      if (error) throw new Error(error.message);
-
-      if (data.success) {
-        setReferenceId(data.referenceId);
-        setPaymentStatus('pending');
-        setPhoneModalVisible(false);
-        
-        Alert.alert(
-          'Paiement initié',
-          `Un code USSD va vous être envoyé sur votre téléphone. Composez *126# pour finaliser le paiement de ${amount.toLocaleString()} FCFA.\n\nRéférence: ${data.referenceId?.slice(0, 8)}`,
-          [
-            { text: 'Composer *126#', onPress: () => dialUSSD() },
-            { text: 'OK', style: 'cancel' }
-          ]
-        );
-        
-        // Démarrer le polling du statut
-        startPollingPaymentStatus(data.referenceId);
-      } else {
-        throw new Error(data.message || 'Erreur lors de l\'initiation du paiement');
-      }
-    } catch (error) {
-      console.error('Erreur paiement:', error);
-      Alert.alert(
-        'Erreur',
-        error.message || 'Impossible d\'initier le paiement. Vérifiez votre connexion et réessayez.'
-      );
-      setPaymentStatus(null);
-    } finally {
-      setIsConfirming(false);
+  try {
+    // 1. Vérifier session active
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !sessionData.session) {
+      throw new Error("Session expirée. Veuillez vous reconnecter.");
     }
-  };
 
+    console.log("✅ Session active");
+
+    // 2. Appel Edge Function
+    const { data, error } = await supabase.functions.invoke('momo-payment', {
+      body: {
+        amount,
+        phoneNumber: formattedPhone,
+        orderId: orderId
+      }
+    });
+
+    // 3. ⚠️ CRITIQUE: supabase.functions.invoke() ne throw PAS sur HTTP 400/500
+    //    Il faut vérifier data.success ET error manuellement
+    
+    if (error) {
+      console.error("❌ Erreur Edge Function:", error);
+      throw new Error(error.message || "Erreur de connexion au serveur");
+    }
+
+    // 4. Vérifier si la réponse contient success: false
+    if (data && !data.success) {
+      console.error("❌ Échec paiement:", data.error);
+      throw new Error(data.error || "Erreur lors de l'initiation du paiement");
+    }
+
+    // 5. Success
+    if (data && data.success && data.referenceId) {
+      setReferenceId(data.referenceId);
+      setPaymentStatus('pending');
+      setPhoneModalVisible(false);
+
+      Alert.alert(
+        '✅ Paiement initié',
+        `Composez *126# pour finaliser le paiement de ${amount.toLocaleString()} FCFA.\n\nRéférence: ${data.referenceId.slice(0, 8)}...`,
+        [
+          { text: 'Composer *126#', onPress: () => dialUSSD() },
+          { text: 'OK', style: 'cancel' }
+        ]
+      );
+
+      // Démarrer le polling
+      startPollingPaymentStatus(data.referenceId);
+    } else {
+      throw new Error("Réponse invalide du serveur");
+    }
+
+  } catch (error) {
+    console.error('❌ Erreur paiement:', error);
+    
+    // Messages d'erreur spécifiques
+    let errorMessage = "Impossible d'initier le paiement.";
+    
+    if (error.message?.includes("Session")) {
+      errorMessage = "Session expirée. Reconnectez-vous.";
+    } else if (error.message?.includes("MTN invalide")) {
+      errorMessage = "Numéro MTN invalide.";
+    } else if (error.message?.includes("déjà payée")) {
+      errorMessage = "Commande déjà payée.";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    Alert.alert('Erreur', errorMessage + "\n\nRéessayez.", [
+      { text: 'Réessayer', onPress: () => setPhoneModalVisible(true) },
+      { text: 'Annuler', style: 'cancel' }
+    ]);
+    
+    setPaymentStatus(null);
+    setReferenceId(null);
+  } finally {
+    setIsConfirming(false);
+  }
+};
   const dialUSSD = () => {
     const ussdCode = '*126#';
     const url = `tel:${ussdCode.replace(/#/g, '%23')}`;
