@@ -18,6 +18,7 @@ import AdminDashboard from '../screens/admin/AdminDashboard';
 import StoreManagerDashboard from '../screens/store/StoreManagerDashboard';
 import SalesDashboard from '../screens/sales/SalesDashboard';
 import DriverDashboard from '../screens/driver/DriverDashboard';
+import AgendaScreen from '../screens/AgendaScreen';
 
 const Tab = createBottomTabNavigator();
 
