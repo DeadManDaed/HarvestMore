@@ -121,6 +121,34 @@ export default function MyCropsScreen({ route, navigation }) {
     setSubmitting(false);
   };
 
+const handleAddCrop = async (cropData) => {
+  // ... création de la parcelle
+  const { data: newPlantation, error } = await supabase
+    .from('user_plantations')
+    .insert({ ... })
+    .select()
+    .single();
+  if (!error && newPlantation) {
+    // Proposer de lancer un programme
+    Alert.alert(
+      'Parcelle enregistrée',
+      'Souhaitez-vous obtenir un programme de culture automatisé pour cette parcelle ?',
+      [
+        { text: 'Non, merci', style: 'cancel' },
+        { text: 'Voir les programmes', onPress: () => navigation.navigate('ProgramSuggestions', {
+            plantationId: newPlantation.id,
+            cropId: cropData.crop_id,
+            cropName: cropData.crop_name,
+            budget: cropData.budget, // si collecté
+            zaeId: cropData.zae_id,  // à déduire de la localisation
+            seasonId: cropData.season_id
+          })
+        }
+      ]
+    );
+  }
+};
+
   const screenTitle = mode === 'selection_diagnostic' 
     ? "Quelle plantation diagnostiquer ?" 
     : "Mes Plantations";
