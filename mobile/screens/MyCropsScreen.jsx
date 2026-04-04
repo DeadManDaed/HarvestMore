@@ -83,7 +83,7 @@ export default function MyCropsScreen({ route, navigation }) {
     }
 
     setSubmitting(true);
-    const { error } = await supabase
+    const { data: newPlantation, error } = await supabase
       .from('user_plantations')
       .insert({
         user_id: user.id,
@@ -97,57 +97,51 @@ export default function MyCropsScreen({ route, navigation }) {
         estimated_yield: parseFloat(formData.estimated_yield) || null,
         interventions: [],
         status: 'active'
-      });
+      })
+      .select()
+      .single();
 
     if (error) {
       Alert.alert('Erreur', error.message);
-    } else {
-      Alert.alert('Succès', 'Plantation ajoutée');
-      setModalVisible(false);
-      setFormData({
-        crop_id: null,
-        crop_name: '',
-        area_size: '',
-        plant_count: '',
-        planting_date: '',
-        location_name: '',
-        estimated_yield: '',
-        latitude: null,
-        longitude: null,
-        interventions: []
-      });
-      fetchPlantations();
+      setSubmitting(false);
+      return;
     }
-    setSubmitting(false);
-  };
 
-const handleAddCrop = async (cropData) => {
-  // ... création de la parcelle
-  const { data: newPlantation, error } = await supabase
-    .from('user_plantations')
-    .insert({ ... })
-    .select()
-    .single();
-  if (!error && newPlantation) {
-    // Proposer de lancer un programme
+    // Succès : réinitialiser le formulaire, fermer la modale, rafraîchir la liste
+    Alert.alert('Succès', 'Plantation ajoutée');
+    setModalVisible(false);
+    setFormData({
+      crop_id: null,
+      crop_name: '',
+      area_size: '',
+      plant_count: '',
+      planting_date: '',
+      location_name: '',
+      estimated_yield: '',
+      latitude: null,
+      longitude: null,
+      interventions: []
+    });
+    fetchPlantations();
+
+    // Proposer un programme automatisé
     Alert.alert(
       'Parcelle enregistrée',
       'Souhaitez-vous obtenir un programme de culture automatisé pour cette parcelle ?',
       [
         { text: 'Non, merci', style: 'cancel' },
-        { text: 'Voir les programmes', onPress: () => navigation.navigate('ProgramSuggestions', {
+        { 
+          text: 'Voir les programmes', 
+          onPress: () => navigation.navigate('ProgramSuggestions', {
             plantationId: newPlantation.id,
-            cropId: cropData.crop_id,
-            cropName: cropData.crop_name,
-            budget: cropData.budget, // si collecté
-            zaeId: cropData.zae_id,  // à déduire de la localisation
-            seasonId: cropData.season_id
+            cropId: formData.crop_id,
+            cropName: formData.crop_name
           })
         }
       ]
     );
-  }
-};
+    setSubmitting(false);
+  };
 
   const screenTitle = mode === 'selection_diagnostic' 
     ? "Quelle plantation diagnostiquer ?" 
